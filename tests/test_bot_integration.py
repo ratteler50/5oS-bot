@@ -1245,9 +1245,9 @@ async def test_on_message_whispermode_command(mock_discord_setup, setup_test_gam
 
     # Process the message
     with patch('bot_impl.backup', return_value=None):
-        with patch('bot_impl.update_presence') as mock_update_presence:
+        with patch('utils.game_utils.update_presence') as mock_update_presence:
             mock_update_presence.return_value = AsyncMock()
-            with patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_safe_send:
+            with patch('commands.channel_commands.safe_send', new_callable=AsyncMock) as mock_safe_send:
                 await on_message(st_message)
 
                 # Verify whisper mode was set to neighbors
@@ -1271,7 +1271,7 @@ async def test_on_message_whispermode_command(mock_discord_setup, setup_test_gam
     )
 
     # Process the invalid message
-    with patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_safe_send:
+    with patch('commands.channel_commands.safe_send', new_callable=AsyncMock) as mock_safe_send:
         await on_message(st_message_invalid)
 
         # Verify error message was sent
@@ -1290,9 +1290,9 @@ async def test_on_message_whispermode_command(mock_discord_setup, setup_test_gam
 
     # Process the all message
     with patch('bot_impl.backup', return_value=None):
-        with patch('bot_impl.update_presence') as mock_update_presence:
+        with patch('utils.game_utils.update_presence') as mock_update_presence:
             mock_update_presence.return_value = AsyncMock()
-            with patch('bot_impl.safe_send', new_callable=AsyncMock):
+            with patch('commands.channel_commands.safe_send', new_callable=AsyncMock):
                 await on_message(st_message_all)
 
                 # Verify whisper mode was set to all
