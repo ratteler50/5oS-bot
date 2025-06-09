@@ -12,4 +12,4 @@
 # import global_vars
 # from commands.registry import registry
 # from model.game.game import NULL_GAME
-# from utils.message_utils import safe_send
+# from utils import message_utils

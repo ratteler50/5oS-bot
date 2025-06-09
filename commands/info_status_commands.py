@@ -5,19 +5,20 @@ import discord
 
 import global_vars
 from commands.registry import registry
+from model.game import Vote
 from model.game.game import NULL_GAME
-from utils.message_utils import safe_send
+from utils import message_utils
 
 
 @registry.command("info")
 async def player_info(message: discord.Message, argument: str):
     """Show detailed player information."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to view player information.")
+        await message_utils.safe_send(message.author, "You don't have permission to view player information.")
         return
 
     from bot_impl import select_player
@@ -61,18 +62,18 @@ async def player_info(message: discord.Message, argument: str):
         # Add more conditions if other preset_values are possible
 
     full_info = "\n".join([base_info, hand_status_info, preset_vote_info, person.character.extra_info()])
-    await safe_send(message.author, full_info)
+    await message_utils.safe_send(message.author, full_info)
 
 
 @registry.command("votehistory")
 async def vote_history(message: discord.Message, argument: str):
     """Show voting history for all days."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if global_vars.gamemaster_role not in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to view player information.")
+        await message_utils.safe_send(message.author, "You don't have permission to view player information.")
         return
 
     for index, day in enumerate(global_vars.game.days):
@@ -82,18 +83,18 @@ async def vote_history(message: discord.Message, argument: str):
             nominee_name = vote.nominee.display_name if vote.nominee else "the storytellers"
             voters = ", ".join([voter.display_name for voter in vote.voted])
             votes_for_day += f"{nominator_name} -> {nominee_name} ({vote.votes}): {voters}\n"
-        await safe_send(message.author, f"```\n{votes_for_day}\n```")
+        await message_utils.safe_send(message.author, f"```\n{votes_for_day}\n```")
 
 
 @registry.command("grimoire")
 async def grimoire(message: discord.Message, argument: str):
     """Show the grimoire with all player roles."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to view player information.")
+        await message_utils.safe_send(message.author, "You don't have permission to view player information.")
         return
 
     message_text = "**Grimoire:**"
@@ -108,4 +109,4 @@ async def grimoire(message: discord.Message, argument: str):
         elif not player.character.is_poisoned and player.is_ghost:
             message_text += " (Dead)"
 
-    await safe_send(message.author, message_text)
+    await message_utils.safe_send(message.author, message_text)

@@ -40,7 +40,6 @@ def file_operation_patches():
 def discord_message_patches():
     """Return patches that mock Discord message sending."""
     return {
-        'bot_impl.safe_send': AsyncMock(),
         'utils.message_utils.safe_send': AsyncMock(),
         'utils.message_utils.safe_send_dm': AsyncMock()
     }

@@ -6,7 +6,7 @@ from bot_client import client
 from commands.registry import registry
 from model.channels import ChannelManager
 from model.settings import GameSettings
-from utils.message_utils import safe_send
+from utils import message_utils
 
 
 @registry.command("welcome")
@@ -19,7 +19,7 @@ async def welcome_player(message: discord.Message, argument: str):
         return
 
     if global_vars.gamemaster_role not in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to do that.")
+        await message_utils.safe_send(message.author, "You don't have permission to do that.")
         return
 
     bot_nick = global_vars.server.get_member(client.user.id).display_name
@@ -42,10 +42,10 @@ async def welcome_player(message: discord.Message, argument: str):
     st_channel = client.get_channel(game_settings.get_st_channel(player.id))
     if not st_channel:
         st_channel = await ChannelManager(client).create_channel(game_settings, player)
-        await safe_send(message.author,
+        await message_utils.safe_send(message.author,
                         f'Successfully created the channel https://discord.com/channels/{global_vars.server.id}/{st_channel.id}!')
 
-    await safe_send(
+    await message_utils.safe_send(
         player,
         "Hello, {player_nick}! {storyteller_nick} welcomes you to Blood on the Clocktower on Discord! I'm {bot_nick}, the bot used on #{channel_name} in {server_name} to run games. Your Storyteller channel for this game is #{st_channel}\n\nThis is where you'll perform your private messaging during the game. To send a pm to a player, type `@pm [name]`.\n\nFor more info, type `@help`, or ask the storyteller(s): {storytellers}.".format(
             bot_nick=bot_nick,
@@ -59,4 +59,4 @@ async def welcome_player(message: discord.Message, argument: str):
             ).display_name,
         ),
     )
-    await safe_send(message.author, f'Welcomed {player.display_name} successfully!')
+    await message_utils.safe_send(message.author, f'Welcomed {player.display_name} successfully!')

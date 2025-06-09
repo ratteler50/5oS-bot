@@ -4,18 +4,18 @@ import discord
 import global_vars
 from commands.registry import registry
 from model.game.game import NULL_GAME
-from utils.message_utils import safe_send
+from utils import message_utils
 
 
 @registry.command("kill")
 async def kill_player(message: discord.Message, argument: str):
     """Kills a player."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to kill players.")
+        await message_utils.safe_send(message.author, "You don't have permission to kill players.")
         return
 
     from bot_impl import select_player, backup
@@ -26,7 +26,7 @@ async def kill_player(message: discord.Message, argument: str):
         return
 
     if person.is_ghost:
-        await safe_send(message.author, "{} is already dead.".format(person.display_name))
+        await message_utils.safe_send(message.author, "{} is already dead.".format(person.display_name))
         return
 
     await person.kill(force=True)
@@ -38,11 +38,11 @@ async def kill_player(message: discord.Message, argument: str):
 async def execute_player(message: discord.Message, argument: str):
     """Executes a player."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to execute players.")
+        await message_utils.safe_send(message.author, "You don't have permission to execute players.")
         return
 
     from bot_impl import select_player, backup
@@ -61,11 +61,11 @@ async def execute_player(message: discord.Message, argument: str):
 async def exile_player(message: discord.Message, argument: str):
     """Exiles a traveler."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to exile travelers.")
+        await message_utils.safe_send(message.author, "You don't have permission to exile travelers.")
         return
 
     from bot_impl import select_player, backup
@@ -77,7 +77,7 @@ async def exile_player(message: discord.Message, argument: str):
         return
 
     if not isinstance(person.character, Traveler):
-        await safe_send(message.author, "{} is not a traveler.".format(person.display_name))
+        await message_utils.safe_send(message.author, "{} is not a traveler.".format(person.display_name))
 
     await person.character.exile(person, message.author)
     if global_vars.game is not NULL_GAME:
@@ -88,11 +88,11 @@ async def exile_player(message: discord.Message, argument: str):
 async def revive_player(message: discord.Message, argument: str):
     """Revives a player."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to revive players.")
+        await message_utils.safe_send(message.author, "You don't have permission to revive players.")
         return
 
     from bot_impl import select_player, backup
@@ -103,7 +103,7 @@ async def revive_player(message: discord.Message, argument: str):
         return
 
     if not person.is_ghost:
-        await safe_send(message.author, "{} is not dead.".format(person.display_name))
+        await message_utils.safe_send(message.author, "{} is not dead.".format(person.display_name))
         return
 
     await person.revive()
@@ -135,11 +135,11 @@ async def revive_player(message: discord.Message, argument: str):
 async def poison_player(message: discord.Message, argument: str):
     """Poison a player."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to poison players.")
+        await message_utils.safe_send(message.author, "You don't have permission to poison players.")
         return
 
     from bot_impl import select_player
@@ -151,18 +151,18 @@ async def poison_player(message: discord.Message, argument: str):
 
     person.character.poison()
 
-    await safe_send(message.author, "Successfully poisoned {}!".format(person.display_name))
+    await message_utils.safe_send(message.author, "Successfully poisoned {}!".format(person.display_name))
 
 
 @registry.command("unpoison")
 async def unpoison_player(message: discord.Message, argument: str):
     """Remove poison from a player."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to revive players.")
+        await message_utils.safe_send(message.author, "You don't have permission to revive players.")
         return
 
     from bot_impl import select_player
@@ -173,7 +173,7 @@ async def unpoison_player(message: discord.Message, argument: str):
         return
 
     person.character.unpoison()
-    await safe_send(message.author, "Successfully unpoisoned {}!".format(person.display_name))
+    await message_utils.safe_send(message.author, "Successfully unpoisoned {}!".format(person.display_name))
 
 
 # @registry.command("removeability")

@@ -19,6 +19,11 @@ The bot uses environment-specific configurations in the `bot_configs/` directory
 Each config defines server IDs, channel IDs, role names, and bot-specific settings. See `config.py` for the main
 configuration template.
 
+## Memories and Development Notes
+
+- Rather than importing safe_send, prefer importing message_utils, and calling message_utils.safe_send rather than just
+  safe_send. This should make refactoring code that uses safe_send easier since patching can be consistent
+
 ## Test Commands
 
 **Prerequisites for running tests:**

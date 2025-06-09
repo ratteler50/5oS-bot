@@ -2,12 +2,13 @@
 Tests for message utility functions used in the BOTC bot
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch, Mock
+from unittest.mock import AsyncMock, patch, Mock
 
 import discord
 import pytest
 
-from utils.message_utils import safe_send, safe_send_dm, _split_text
+from utils import message_utils
+from utils.message_utils import _split_text
 
 
 class TestSplitText:
@@ -58,7 +59,7 @@ class TestSafeSend:
         """Test sending a normal message."""
         self.channel.send.return_value = AsyncMock(spec=discord.Message)
 
-        result = await safe_send(self.channel, "Test message")
+        result = await message_utils.safe_send(self.channel, "Test message")
 
         self.channel.send.assert_called_once_with("Test message")
         assert result is not None
@@ -70,7 +71,7 @@ class TestSafeSend:
         """Test sending an empty message adds zero-width space."""
         self.channel.send.return_value = AsyncMock(spec=discord.Message)
 
-        result = await safe_send(self.channel)
+        result = await message_utils.safe_send(self.channel)
 
         self.channel.send.assert_called_once_with("\u200b")
         assert result is not None
@@ -88,7 +89,7 @@ class TestSafeSend:
         first_message = AsyncMock(spec=discord.Message)
         self.channel.send.side_effect = [first_message, AsyncMock()]
 
-        result = await safe_send(self.channel, long_message)
+        result = await message_utils.safe_send(self.channel, long_message)
 
         mock_split_text.assert_called_once_with(long_message)
         assert self.channel.send.call_count == 2
@@ -101,7 +102,7 @@ class TestSafeSend:
         """Test handling HTTP exceptions."""
         self.channel.send.side_effect = discord.HTTPException(response=Mock(), message="Error")
 
-        result = await safe_send(self.channel, "Test message")
+        result = await message_utils.safe_send(self.channel, "Test message")
 
         assert result is None
         mock_logger.error.assert_called_once()
@@ -112,7 +113,7 @@ class TestSafeSend:
         """Test handling generic exceptions."""
         self.channel.send.side_effect = Exception("General error")
 
-        result = await safe_send(self.channel, "Test message")
+        result = await message_utils.safe_send(self.channel, "Test message")
 
         assert result is None
         mock_logger.error.assert_called_once()
@@ -133,7 +134,7 @@ class TestSafeSendDM:
         self.user.dm_channel = self.dm_channel
         mock_safe_send.return_value = AsyncMock(spec=discord.Message)
 
-        result = await safe_send_dm(self.user, "Test DM")
+        result = await message_utils.safe_send_dm(self.user, "Test DM")
 
         self.user.create_dm.assert_not_called()
         mock_safe_send.assert_called_once_with(self.dm_channel, "Test DM")
@@ -147,7 +148,7 @@ class TestSafeSendDM:
         self.user.create_dm.return_value = self.dm_channel
         mock_safe_send.return_value = AsyncMock(spec=discord.Message)
 
-        result = await safe_send_dm(self.user, "Test DM")
+        result = await message_utils.safe_send_dm(self.user, "Test DM")
 
         self.user.create_dm.assert_called_once()
         mock_safe_send.assert_called_once_with(self.dm_channel, "Test DM")
@@ -161,7 +162,7 @@ class TestSafeSendDM:
         self.user.display_name = "TestUser"
         self.dm_channel.send.side_effect = discord.HTTPException(response=Mock(), message="Error")
 
-        result = await safe_send_dm(self.user, "Test DM")
+        result = await message_utils.safe_send_dm(self.user, "Test DM")
 
         assert result is None
         mock_logger.error.assert_called_once()
@@ -174,7 +175,7 @@ class TestSafeSendDM:
         self.user.display_name = "TestUser"
         self.user.create_dm.side_effect = Exception("General error")
 
-        result = await safe_send_dm(self.user, "Test DM")
+        result = await message_utils.safe_send_dm(self.user, "Test DM")
 
         assert result is None
         mock_logger.error.assert_called_once_with("Unexpected error sending DM to TestUser: General error")

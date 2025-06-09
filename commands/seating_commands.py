@@ -4,7 +4,7 @@ import discord
 import global_vars
 from commands.registry import registry
 from model.game.game import NULL_GAME
-from utils.message_utils import safe_send
+from utils import message_utils
 
 
 def backup(filename: str):
@@ -17,11 +17,11 @@ def backup(filename: str):
 async def remove_traveler(message: discord.Message, argument: str):
     """Remove a traveler from the game."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to remove travelers.")
+        await message_utils.safe_send(message.author, "You don't have permission to remove travelers.")
         return
 
     from bot_impl import select_player
@@ -40,11 +40,11 @@ async def remove_traveler(message: discord.Message, argument: str):
 async def reset_seats(message: discord.Message, argument: str):
     """Resets the seating chart."""
     if global_vars.game is NULL_GAME:
-        await safe_send(message.author, "There's no game right now.")
+        await message_utils.safe_send(message.author, "There's no game right now.")
         return
 
     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-        await safe_send(message.author, "You don't have permission to change the seating chart.")
+        await message_utils.safe_send(message.author, "You don't have permission to change the seating chart.")
         return
 
     await global_vars.game.reseat(global_vars.game.seatingOrder)

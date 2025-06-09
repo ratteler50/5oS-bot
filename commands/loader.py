@@ -6,7 +6,7 @@ def load_all_commands():
     """Import all command modules to register their commands."""
     command_modules = [
         "commands.info_commands",
-        # "commands.game_commands",  # temporarily disabled
+        # "commands.game_commands",  # TODO: enable after implementing
         "commands.player_commands",
         "commands.channel_commands",
         "commands.admin_commands",

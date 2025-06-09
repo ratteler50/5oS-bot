@@ -488,7 +488,7 @@ def test_storyteller_changerole_command(mock_discord_setup, setup_test_game):
     with patch('bot_impl.select_player', return_value=setup_test_game['players']['alice']):
         with patch('model.characters.registry.str_to_class', return_value=MagicMock()):  # Mock character class lookup
             with patch('bot_impl.backup') as mock_backup:
-                with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+                with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
                     # Set a mock character class for Washerwoman
                     washerwoman_class = MagicMock()
                     washerwoman_class.name = "Washerwoman"
@@ -528,7 +528,7 @@ def test_storyteller_changealignment_command(mock_discord_setup, setup_test_game
     # Test changealignment command
     with patch('bot_impl.select_player', return_value=setup_test_game['players']['alice']):
         with patch('bot_impl.backup') as mock_backup:
-            with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+            with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
                 # Change alignment to evil
                 setup_test_game['players']['alice'].alignment = "evil"
 
@@ -552,7 +552,7 @@ def test_storyteller_ability_management(mock_discord_setup, setup_test_game):
     # Test changeability command
     with patch('bot_impl.select_player', return_value=setup_test_game['players']['alice']):
         with patch('bot_impl.backup') as mock_backup:
-            with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+            with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
                 # Change ability - in the real implementation, abilities are managed through the character
                 # We'll skip this test as the real implementation would use character.add_ability()
                 pass
@@ -560,7 +560,7 @@ def test_storyteller_ability_management(mock_discord_setup, setup_test_game):
     # Test removeability command
     with patch('bot_impl.select_player', return_value=setup_test_game['players']['alice']):
         with patch('bot_impl.backup') as mock_backup:
-            with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+            with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
                 # Remove ability - in the real implementation, abilities are managed through the character
                 # We'll skip this test as the real implementation would use character.clear_ability()
                 pass
@@ -677,7 +677,7 @@ def test_storyteller_whispermode_command(mock_discord_setup, setup_test_game):
 
     for mode in whisper_modes:
         # Use direct setting for testing
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             with patch('bot_impl.update_presence', new_callable=AsyncMock):
                 # Set the whisper mode directly
                 original_mode = global_vars.game.whisper_mode
@@ -706,7 +706,7 @@ def test_storyteller_setdeadline_command(mock_discord_setup, setup_test_game):
     # Test setdeadline command
     with patch('time_utils.time_utils.parse_deadline', return_value=test_timestamp):
         with patch('bot_impl.backup') as mock_backup:
-            with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+            with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
                 with patch('bot_impl.update_presence', return_value=AsyncMock()) as mock_update_presence:
                     # Set deadline
                     setup_test_game['game'].deadline = test_timestamp
@@ -716,7 +716,7 @@ def test_storyteller_setdeadline_command(mock_discord_setup, setup_test_game):
 
     # Test clearing the deadline
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             with patch('bot_impl.update_presence', return_value=AsyncMock()) as mock_update_presence:
                 # Clear deadline
                 setup_test_game['game'].deadline = None
@@ -748,7 +748,7 @@ async def test_storyteller_cancelnomination_command(mock_discord_setup, setup_te
 
     # Test cancelnomination command
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Clear votes
             setup_test_game['game'].days[-1].votes = []
 
@@ -782,7 +782,7 @@ async def test_storyteller_adjustvotes_command(mock_discord_setup, setup_test_ga
 
     # Test adjustvotes command
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Set to 2 yes, 0 no
             vote.history = [1, 1]  # Both yes votes
 
@@ -807,7 +807,7 @@ def test_storyteller_automatekills_command(mock_discord_setup, setup_test_game):
 
     # Test enabling automatic kills
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Enable
             setup_test_game['game'].has_automated_life_and_death = True
 
@@ -816,7 +816,7 @@ def test_storyteller_automatekills_command(mock_discord_setup, setup_test_game):
 
     # Test disabling automatic kills
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Disable
             setup_test_game['game'].has_automated_life_and_death = False
 
@@ -836,7 +836,7 @@ def test_storyteller_setatheist_command(mock_discord_setup, setup_test_game):
 
     # Test enabling atheist mode
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Enable
             setup_test_game['game'].is_atheist = True
 
@@ -845,7 +845,7 @@ def test_storyteller_setatheist_command(mock_discord_setup, setup_test_game):
 
     # Test disabling atheist mode
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Disable
             setup_test_game['game'].is_atheist = False
 
@@ -865,7 +865,7 @@ def test_storyteller_tally_commands(mock_discord_setup, setup_test_game):
 
     # Test enabletally command
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Enable tally
             setup_test_game['game'].show_tally = True
 
@@ -874,7 +874,7 @@ def test_storyteller_tally_commands(mock_discord_setup, setup_test_game):
 
     # Test disabletally command
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Disable tally
             setup_test_game['game'].show_tally = False
 
@@ -883,7 +883,7 @@ def test_storyteller_tally_commands(mock_discord_setup, setup_test_game):
 
     # Test messagetally command with valid ID
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Set tally message ID
             tally_message_id = 1000  # Mock message ID
             setup_test_game['game'].tally_message_id = tally_message_id
@@ -907,7 +907,7 @@ def test_storyteller_reseat_commands(mock_discord_setup, setup_test_game):
 
     # Test reseat command
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Reorder seating order directly instead of using send_seating_order
             new_order = [
                 setup_test_game['players']['alice'],
@@ -923,7 +923,7 @@ def test_storyteller_reseat_commands(mock_discord_setup, setup_test_game):
 
     # Test resetseats command
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('utils.message_utils.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Reset seating order
             setup_test_game['game'].seatingOrder = original_seating_order
 
@@ -954,7 +954,7 @@ async def test_storyteller_welcome_command_simplified(mock_discord_setup, setup_
     # in the bot_impl module and check if it contains the right logic
 
     # Test directly with mocked functions instead of calling the actual command
-    with patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_safe_send:
+    with patch('utils.message_utils.safe_send', new_callable=AsyncMock) as mock_safe_send:
         # Call safe_send with welcome message content
         welcome_message = "Hello, Alice! Welcome to Blood on the Clocktower on Discord! This is your Storyteller channel."
         await mock_safe_send(alice.user, welcome_message)
@@ -992,10 +992,10 @@ async def test_info_command_enhancements(mock_discord_setup, setup_test_game):
     # Ensure the game is in a state where a day exists for game.days[-1] access
     if not game.days:
         await game.start_day() # Start a day if no days exist
-    elif not game.isDay: # If a day exists but it's night, start a new day
+    elif not game.isDay:  # If a day exists, but it's night, start a new day
         await game.start_day()
 
-    with patch('commands.info_status_commands.safe_send', new_callable=AsyncMock) as mock_safe_send, \
+    with patch('utils.message_utils.safe_send', new_callable=AsyncMock) as mock_safe_send, \
             patch('bot_impl.backup') as mock_backup:
         # Scenario 1: No active vote
         game.days[-1].votes = []
@@ -1121,7 +1121,7 @@ async def test_presetvote_storyteller_context_hand_down(mock_discord_setup, setu
             patch('bot_impl.backup') as mock_backup, \
             patch.object(game, 'update_seating_order_message', new_callable=AsyncMock) as mock_update_seating, \
             patch('utils.message_utils.safe_send', new_callable=AsyncMock) as mock_safe_send_utils, \
-            patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_safe_send_impl, \
+            patch('utils.message_utils.safe_send', new_callable=AsyncMock) as mock_safe_send_impl, \
             patch('bot_impl.client', mock_discord_setup['client']):
         mock_safe_send_impl.return_value.channel = mock_safe_send_channel
         # Order of return values for client.wait_for: 1. ST chooses player, 2. ST chooses hand status
@@ -1195,7 +1195,7 @@ async def test_cancelpreset_storyteller_context_hand_down(mock_discord_setup, se
             patch('bot_impl.backup') as mock_backup, \
             patch.object(game, 'update_seating_order_message', new_callable=AsyncMock) as mock_update_seating, \
             patch('utils.message_utils.safe_send', new_callable=AsyncMock) as mock_safe_send_utils, \
-            patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_safe_send_impl, \
+            patch('utils.message_utils.safe_send', new_callable=AsyncMock) as mock_safe_send_impl, \
             patch('bot_impl.client', mock_discord_setup['client']):
         # Set up wait_for responses
         mock_discord_setup['client'].wait_for = AsyncMock(side_effect=[

@@ -27,8 +27,8 @@ from model.game.whisper_mode import chose_whisper_candidates
 from model.player import Player, STORYTELLER_ALIGNMENT
 from model.settings import GlobalSettings, GameSettings
 from time_utils import parse_deadline
+from utils import message_utils
 from utils.character_utils import the_ability
-from utils.message_utils import safe_send
 from utils.player_utils import check_and_print_if_one_or_zero_to_check_in
 
 # Load all commands into the registry
@@ -91,7 +91,7 @@ async def choices(user: User, possibilities: list[Player], text: str) -> Optiona
         )
 
     # Request clarifciation from user
-    reply = await safe_send(user, message_text)
+    reply = await message_utils.safe_send(user, message_text)
     try:
         choice = await client.wait_for(
             "message",
@@ -99,12 +99,12 @@ async def choices(user: User, possibilities: list[Player], text: str) -> Optiona
             timeout=200,
         )
     except asyncio.TimeoutError:
-        await safe_send(user, "Timed out.")
+        await message_utils.safe_send(user, "Timed out.")
         return
 
     # Cancel
     if choice.content.lower() == "cancel":
-        await safe_send(user, "Action cancelled!")
+        await message_utils.safe_send(user, "Action cancelled!")
         return
 
     # If a is an int
@@ -124,7 +124,7 @@ async def select_player(user: User, text: str, possibilities: Sequence[T]) -> Op
 
     # If no users found
     if len(new_possibilities) == 0:
-        await safe_send(user, "User {} not found. Try again!".format(text))
+        await message_utils.safe_send(user, "User {} not found. Try again!".format(text))
         return
 
     # If exactly one user found
@@ -139,7 +139,7 @@ async def select_player(user: User, text: str, possibilities: Sequence[T]) -> Op
 async def yes_no(user, text):
     # Ask a yes or no question of a user
 
-    reply = await safe_send(user, "{}? yes or no".format(text))
+    reply = await message_utils.safe_send(user, "{}? yes or no".format(text))
     try:
         choice = await client.wait_for(
             "message",
@@ -147,12 +147,12 @@ async def yes_no(user, text):
             timeout=200,
         )
     except asyncio.TimeoutError:
-        await safe_send(user, "Timed out.")
+        await message_utils.safe_send(user, "Timed out.")
         return
 
     # Cancel
     if choice.content.lower() == "cancel":
-        await safe_send(user, "Action cancelled!")
+        await message_utils.safe_send(user, "Action cancelled!")
         return
 
     # Yes
@@ -164,7 +164,7 @@ async def yes_no(user, text):
         return False
 
     else:
-        return await safe_send(
+        return await message_utils.safe_send(
             user, "Your answer must be 'yes,' 'y,' 'no,' or 'n' exactly. Try again."
         )
 
@@ -220,12 +220,12 @@ async def make_active(user):
     ]
     if len(notActive) == 1:
         for memb in global_vars.gamemaster_role.members:
-            await safe_send(
+            await message_utils.safe_send(
                 memb, "Just waiting on {} to speak.".format(notActive[0].display_name)
             )
     if len(notActive) == 0:
         for memb in global_vars.gamemaster_role.members:
-            await safe_send(memb, "Everyone has spoken!")
+            await message_utils.safe_send(memb, "Everyone has spoken!")
 
 
 async def cannot_nominate(user):
@@ -241,13 +241,13 @@ async def cannot_nominate(user):
     ]
     if len(can_nominate) == 1:
         for memb in global_vars.gamemaster_role.members:
-            await safe_send(
+            await message_utils.safe_send(
                 memb,
                 "Just waiting on {} to nominate or skip.".format(can_nominate[0].display_name),
             )
     if len(can_nominate) == 0:
         for memb in global_vars.gamemaster_role.members:
-            await safe_send(memb, "Everyone has nominated or skipped!")
+            await message_utils.safe_send(memb, "Everyone has nominated or skipped!")
 
 
 async def update_presence(client):
@@ -433,15 +433,15 @@ async def on_message(message):
             if command == "vote":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(global_vars.channel, "There's no game right now.")
+                    await message_utils.safe_send(global_vars.channel, "There's no game right now.")
                     return
 
                 if global_vars.game.isDay == False:
-                    await safe_send(global_vars.channel, "It's not day right now.")
+                    await message_utils.safe_send(global_vars.channel, "It's not day right now.")
                     return
 
                 if global_vars.game.days[-1].votes == [] or global_vars.game.days[-1].votes[-1].done == True:
-                    await safe_send(global_vars.channel, "There's no vote right now.")
+                    await message_utils.safe_send(global_vars.channel, "There's no vote right now.")
                     return
 
                 if (
@@ -450,7 +450,7 @@ async def on_message(message):
                     and argument != "no"
                     and argument != "n"
                 ):
-                    await safe_send(
+                    await message_utils.safe_send(
                         global_vars.channel,
                         "{} is not a valid vote. Use 'yes', 'y', 'no', or 'n'.".format(
                             argument
@@ -462,19 +462,20 @@ async def on_message(message):
 
                 voting_player = (await get_player(message.author))
                 if not voting_player:
-                    await safe_send(global_vars.channel, "You are not a player in the game.")
+                    await message_utils.safe_send(global_vars.channel, "You are not a player in the game.")
                     return
                 if (
                     vote.order[vote.position].user
                     != voting_player.user
                 ):
-                    await safe_send(global_vars.channel, "It's not your vote right now.")
+                    await message_utils.safe_send(global_vars.channel, "It's not your vote right now.")
                     return
 
                 vt = int(argument == "yes" or argument == "y")
                 voudon_in_play = in_play_voudon()
                 if vt > 0 and voudon_in_play and voting_player != voudon_in_play and not voting_player.is_ghost:
-                    await safe_send(global_vars.channel, "Voudon is in play. Only the Voudon and dead may vote.")
+                    await message_utils.safe_send(global_vars.channel,
+                                                  "Voudon is in play. Only the Voudon and dead may vote.")
                     return
 
                 await vote.vote(vt)
@@ -522,14 +523,15 @@ async def on_message(message):
                 game_settings: GameSettings = GameSettings.load()
 
                 if global_vars.game is not NULL_GAME:
-                    await safe_send(message.author, "There's already an ongoing game!")
+                    await message_utils.safe_send(message.author, "There's already an ongoing game!")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to start a game.")
+                    await message_utils.safe_send(message.author, "You don't have permission to start a game.")
                     return
 
-                msg = await safe_send(message.author, "What is the seating order? (separate users with line breaks)")
+                msg = await message_utils.safe_send(message.author,
+                                                    "What is the seating order? (separate users with line breaks)")
                 try:
                     order_message = await client.wait_for(
                         "message",
@@ -537,11 +539,11 @@ async def on_message(message):
                         timeout=200,
                     )
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Time out.")
+                    await message_utils.safe_send(message.author, "Time out.")
                     return
 
                 if order_message.content == "cancel":
-                    await safe_send(message.author, "Game cancelled!")
+                    await message_utils.safe_send(message.author, "Game cancelled!")
                     return
 
                 order: list[str] = order_message.content.split("\n")
@@ -561,7 +563,8 @@ async def on_message(message):
                     await warn_missing_player_channels(message.author, players_missing_channels)
                     return
 
-                await safe_send(message.author, "What are the corresponding roles? (also separated with line breaks)")
+                await message_utils.safe_send(message.author,
+                                              "What are the corresponding roles? (also separated with line breaks)")
                 try:
                     roles_message = await client.wait_for(
                         "message",
@@ -569,17 +572,17 @@ async def on_message(message):
                         timeout=200,
                     )
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out.")
+                    await message_utils.safe_send(message.author, "Timed out.")
                     return
 
                 if roles_message.content == "cancel":
-                    await safe_send(message.author, "Game cancelled!")
+                    await message_utils.safe_send(message.author, "Game cancelled!")
                     return
 
                 roles: list[str] = roles_message.content.split("\n")
 
                 if len(roles) != len(order):
-                    await safe_send(message.author, "Players and roles do not match.")
+                    await message_utils.safe_send(message.author, "Players and roles do not match.")
                     return
 
                 characters: list[type[Character]] = []
@@ -588,7 +591,7 @@ async def on_message(message):
                     try:
                         role = str_to_class(role)
                     except AttributeError:
-                        await safe_send(message.author, "Role not found: {}.".format(text))
+                        await message_utils.safe_send(message.author, "Role not found: {}.".format(text))
                         return
                     characters.append(role)
 
@@ -616,7 +619,7 @@ async def on_message(message):
                 alignments: list[str] = []
                 for role in characters:
                     if issubclass(role, Traveler):
-                        msg = await safe_send(
+                        msg = await message_utils.safe_send(
                             message.author,
                             "What alignment is the {}?".format(role(None).role_name)
                         )
@@ -627,18 +630,19 @@ async def on_message(message):
                                 timeout=200,
                             )
                         except asyncio.TimeoutError:
-                            await safe_send(message.author, "Timed out.")
+                            await message_utils.safe_send(message.author, "Timed out.")
                             return
 
                         if alignment.content == "cancel":
-                            await safe_send(message.author, "Game cancelled!")
+                            await message_utils.safe_send(message.author, "Game cancelled!")
                             return
 
                         if (
                             alignment.content.lower() != "good"
                             and alignment.content.lower() != "evil"
                         ):
-                            await safe_send(message.author, "The alignment must be 'good' or 'evil' exactly.")
+                            await message_utils.safe_send(message.author,
+                                                          "The alignment must be 'good' or 'evil' exactly.")
                             return
 
                         alignments.append(alignment.content.lower())
@@ -657,7 +661,7 @@ async def on_message(message):
                         Player(characters[x], alignments[x], users[x], st_channels[x], position=x)
                     )
 
-                msg = await safe_send(
+                msg = await message_utils.safe_send(
                     message.author,
                     "What roles are on the script? (send the text of the json file from the script creator)"
                 )
@@ -668,11 +672,11 @@ async def on_message(message):
                         timeout=200,
                     )
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out.")
+                    await message_utils.safe_send(message.author, "Timed out.")
                     return
 
                 if script_message.content == "cancel":
-                    await safe_send(message.author, "Game cancelled!")
+                    await message_utils.safe_send(message.author, "Game cancelled!")
                     return
 
                 script_list = ''.join(script_message.content.split())[8:-3].split('"},{"id":"')
@@ -684,7 +688,7 @@ async def on_message(message):
                 await asyncio.gather(*tasks)
                 await reorder_channels(st_channels)
 
-                await safe_send(
+                await message_utils.safe_send(
                     global_vars.channel,
                     "{}, welcome to Blood on the Clocktower! Go to sleep.".format(
                         global_vars.player_role.mention
@@ -701,7 +705,7 @@ async def on_message(message):
                         message_text += person.character.seating_order_message(
                             seating_order
                         )
-                seating_order_message = await safe_send(global_vars.channel, message_text)
+                seating_order_message = await message_utils.safe_send(global_vars.channel, message_text)
                 await seating_order_message.pin()
 
                 num_full_players = len([x for x in characters if not issubclass(x, Traveler)])
@@ -715,7 +719,7 @@ async def on_message(message):
                     minions = int(math.floor((num_full_players - 1) / 3) - 1)
                     distribution = (num_full_players - (outsiders + minions + 1), outsiders, minions, 1)
 
-                msg = await safe_send(
+                msg = await message_utils.safe_send(
                     global_vars.channel,
                     f"There are {num_full_players} non-Traveler players. The default distribution is {distribution[0]} Townsfolk, {distribution[1]} Outsider{'s' if distribution[1] != 1 else ''}, {distribution[2]} Minion{'s' if distribution[2] != 1 else ''}, and {distribution[3]} Demon."
                 )
@@ -725,7 +729,7 @@ async def on_message(message):
                 info_channel_message = None
                 if global_vars.info_channel:
                     try:
-                        info_channel_message = await safe_send(global_vars.info_channel, message_text)
+                        info_channel_message = await message_utils.safe_send(global_vars.info_channel, message_text)
                         if info_channel_message:
                             await info_channel_message.pin()
                     except Exception as e:
@@ -742,21 +746,22 @@ async def on_message(message):
             elif command == "endgame":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to end the game.")
+                    await message_utils.safe_send(message.author, "You don't have permission to end the game.")
                     return
 
                 argument = argument.lower()
 
                 if argument != "good" and argument != "evil" and argument != "tie":
-                    await safe_send(message.author, "The winner must be 'good' or 'evil' or 'tie' exactly.")
+                    await message_utils.safe_send(message.author,
+                                                  "The winner must be 'good' or 'evil' or 'tie' exactly.")
                     return
 
                 for memb in global_vars.game.storytellers:
-                    await safe_send(
+                    await message_utils.safe_send(
                         memb.user,
                         f"{message.author.display_name} has ended the game! {'Good won!' if argument == 'good' else 'Evil won!' if argument == 'evil' else ''}  Please wait for the bot to finish.",
                     )
@@ -770,15 +775,15 @@ async def on_message(message):
             elif command == "startday":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to start the day.")
+                    await message_utils.safe_send(message.author, "You don't have permission to start the day.")
                     return
 
                 if global_vars.game.isDay == True:
-                    await safe_send(message.author, "It's already day!")
+                    await message_utils.safe_send(message.author, "It's already day!")
                     return
 
                 if argument == "":
@@ -803,15 +808,15 @@ async def on_message(message):
             elif command == "endday":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to end the day.")
+                    await message_utils.safe_send(message.author, "You don't have permission to end the day.")
                     return
 
                 if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's already night!")
+                    await message_utils.safe_send(message.author, "It's already night!")
                     return
 
                 await global_vars.game.days[-1].end()
@@ -823,11 +828,11 @@ async def on_message(message):
             elif command == "changerole":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to change roles.")
+                    await message_utils.safe_send(message.author, "You don't have permission to change roles.")
                     return
 
                 person = await select_player(
@@ -836,7 +841,7 @@ async def on_message(message):
                 if person is None:
                     return
 
-                msg = await safe_send(message.author, "What is the new role?")
+                msg = await message_utils.safe_send(message.author, "What is the new role?")
                 try:
                     role = await client.wait_for(
                         "message",
@@ -844,24 +849,24 @@ async def on_message(message):
                         timeout=200,
                     )
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out.")
+                    await message_utils.safe_send(message.author, "Timed out.")
                     return
 
                 role = role.content.lower()
 
                 if role == "cancel":
-                    await safe_send(message.author, "Role change cancelled!")
+                    await message_utils.safe_send(message.author, "Role change cancelled!")
                     return
 
                 role = str_cleanup(role, [",", " ", "-", "'"])
                 try:
                     role = str_to_class(role)
                 except AttributeError:
-                    await safe_send(message.author, "Role not found: {}.".format(role))
+                    await message_utils.safe_send(message.author, "Role not found: {}.".format(role))
                     return
 
                 await person.change_character(role)
-                await safe_send(message.author, "Role change successful!")
+                await message_utils.safe_send(message.author, "Role change successful!")
                 if global_vars.game is not NULL_GAME:
                     backup("current_game.pckl")
                 return
@@ -870,11 +875,11 @@ async def on_message(message):
             elif command == "changealignment":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to change alignments.")
+                    await message_utils.safe_send(message.author, "You don't have permission to change alignments.")
                     return
 
                 person = await select_player(
@@ -883,7 +888,7 @@ async def on_message(message):
                 if person is None:
                     return
 
-                msg = await safe_send(message.author, "What is the new alignment?")
+                msg = await message_utils.safe_send(message.author, "What is the new alignment?")
                 try:
                     alignment = await client.wait_for(
                         "message",
@@ -891,21 +896,21 @@ async def on_message(message):
                         timeout=200,
                     )
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out.")
+                    await message_utils.safe_send(message.author, "Timed out.")
                     return
 
                 alignment = alignment.content.lower()
 
                 if alignment == "cancel":
-                    await safe_send(message.author, "Alignment change cancelled!")
+                    await message_utils.safe_send(message.author, "Alignment change cancelled!")
                     return
 
                 if alignment != "good" and alignment != "evil":
-                    await safe_send(message.author, "The alignment must be 'good' or 'evil' exactly.")
+                    await message_utils.safe_send(message.author, "The alignment must be 'good' or 'evil' exactly.")
                     return
 
                 await person.change_alignment(alignment)
-                await safe_send(message.author, "Alignment change successful!")
+                await message_utils.safe_send(message.author, "Alignment change successful!")
                 if global_vars.game is not NULL_GAME:
                     backup("current_game.pckl")
                 return
@@ -913,11 +918,11 @@ async def on_message(message):
             # Adds an ability to an AbilityModifier character
             elif command == "changeability":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to give abilities.")
+                    await message_utils.safe_send(message.author, "You don't have permission to give abilities.")
                     return
 
                 person = await select_player(
@@ -927,10 +932,11 @@ async def on_message(message):
                     return
 
                 if not isinstance(person.character, AbilityModifier):
-                    await safe_send(message.author, "The {} cannot gain abilities.".format(person.character.role_name))
+                    await message_utils.safe_send(message.author,
+                                                  "The {} cannot gain abilities.".format(person.character.role_name))
                     return
 
-                msg = await safe_send(message.author, "What is the new ability role?")
+                msg = await message_utils.safe_send(message.author, "What is the new ability role?")
                 try:
                     role = await client.wait_for(
                         "message",
@@ -938,34 +944,34 @@ async def on_message(message):
                         timeout=200,
                     )
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out.")
+                    await message_utils.safe_send(message.author, "Timed out.")
                     return
 
                 role = role.content.lower()
 
                 if role == "cancel":
-                    await safe_send(message.author, "New ability cancelled!")
+                    await message_utils.safe_send(message.author, "New ability cancelled!")
                     return
 
                 role = str_cleanup(role, [",", " ", "-", "'"])
                 try:
                     role = str_to_class(role)
                 except AttributeError:
-                    await safe_send(message.author, "Role not found: {}.".format(role))
+                    await message_utils.safe_send(message.author, "Role not found: {}.".format(role))
                     return
 
                 person.character.add_ability(role)
-                await safe_send(message.author, "New ability added.")
+                await message_utils.safe_send(message.author, "New ability added.")
                 return
 
             # removes an ability from an AbilityModifier ability (useful if a nested ability is gained)
             elif command == "removeability":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to remove abilities.")
+                    await message_utils.safe_send(message.author, "You don't have permission to remove abilities.")
                     return
 
                 person = await select_player(
@@ -975,25 +981,27 @@ async def on_message(message):
                     return
 
                 if not isinstance(person.character, AbilityModifier):
-                    await safe_send(message.author, "The {} cannot gain abilities to clear.".format(person.character.role_name))
+                    await message_utils.safe_send(message.author, "The {} cannot gain abilities to clear.".format(
+                        person.character.role_name))
                     return
 
                 removed_ability = person.character.clear_ability()
                 if (removed_ability):
-                    await safe_send(message.author, "Ability removed: {}".format(removed_ability.role_name))
+                    await message_utils.safe_send(message.author,
+                                                  "Ability removed: {}".format(removed_ability.role_name))
                 else:
-                    await safe_send(message.author, "No ability to remove")
+                    await message_utils.safe_send(message.author, "No ability to remove")
                 return
 
             # Adds traveler
             elif command == "addtraveler" or command == "addtraveller":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if global_vars.gamemaster_role not in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to add travelers.")
+                    await message_utils.safe_send(message.author, "You don't have permission to add travelers.")
                     return
 
                 person = await select_player(message.author, argument, global_vars.server.members)
@@ -1001,7 +1009,8 @@ async def on_message(message):
                     return
 
                 if await get_player(person) is not None:
-                    await safe_send(message.author, "{} is already in the game.".format(person.display_name if person.display_name else person.name))
+                    await message_utils.safe_send(message.author, "{} is already in the game.".format(
+                        person.display_name if person.display_name else person.name))
                     return
 
                 st_channel = global_vars.server.get_channel(GameSettings.load().get_st_channel(person.id))
@@ -1009,7 +1018,7 @@ async def on_message(message):
                     await warn_missing_player_channels(message.author, [person])
                     return
 
-                msg = await safe_send(message.author, "What role?")
+                msg = await message_utils.safe_send(message.author, "What role?")
                 try:
                     text = await client.wait_for(
                         "message",
@@ -1017,11 +1026,11 @@ async def on_message(message):
                         timeout=200,
                     )
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out.")
+                    await message_utils.safe_send(message.author, "Timed out.")
                     return
 
                 if text.content == "cancel":
-                    await safe_send(message.author, "Traveler cancelled!")
+                    await message_utils.safe_send(message.author, "Traveler cancelled!")
                     return
 
                 text = text.content
@@ -1031,15 +1040,16 @@ async def on_message(message):
                 try:
                     role = str_to_class(role)
                 except AttributeError:
-                    await safe_send(message.author, "Role not found: {}.".format(text))
+                    await message_utils.safe_send(message.author, "Role not found: {}.".format(text))
                     return
 
                 if not issubclass(role, Traveler):
-                    await safe_send(message.author, "{} is not a traveler role.".format(text))
+                    await message_utils.safe_send(message.author, "{} is not a traveler role.".format(text))
                     return
 
                 # Determine position in order
-                msg = await safe_send(message.author, "Where in the order are they? (send the player before them or a one-indexed integer)")
+                msg = await message_utils.safe_send(message.author,
+                                                    "Where in the order are they? (send the player before them or a one-indexed integer)")
                 try:
                     pos = await client.wait_for(
                         "message",
@@ -1048,11 +1058,11 @@ async def on_message(message):
                     )
 
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out.")
+                    await message_utils.safe_send(message.author, "Timed out.")
                     return
 
                 if pos.content == "cancel":
-                    await safe_send(message.author, "Traveler cancelled!")
+                    await message_utils.safe_send(message.author, "Traveler cancelled!")
                     return
 
                 pos = pos.content
@@ -1066,7 +1076,7 @@ async def on_message(message):
                     pos = player.position + 1
 
                 # Determine alignment
-                msg = await safe_send(message.author, "What alignment are they?")
+                msg = await message_utils.safe_send(message.author, "What alignment are they?")
                 try:
                     alignment = await client.wait_for(
                         "message",
@@ -1075,18 +1085,18 @@ async def on_message(message):
                     )
 
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out.")
+                    await message_utils.safe_send(message.author, "Timed out.")
                     return
 
                 if alignment.content == "cancel":
-                    await safe_send(message.author, "Traveler cancelled!")
+                    await message_utils.safe_send(message.author, "Traveler cancelled!")
                     return
 
                 if (
                     alignment.content.lower() != "good"
                     and alignment.content.lower() != "evil"
                 ):
-                    await safe_send(message.author, "The alignment must be 'good' or 'evil' exactly.")
+                    await message_utils.safe_send(message.author, "The alignment must be 'good' or 'evil' exactly.")
                     return
 
                 await global_vars.game.add_traveler(
@@ -1101,13 +1111,15 @@ async def on_message(message):
             elif command == "reseat":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to change the seating chart.")
+                    await message_utils.safe_send(message.author,
+                                                  "You don't have permission to change the seating chart.")
                     return
 
-                msg = await safe_send(message.author, "What is the seating order? (separate users with line breaks)")
+                msg = await message_utils.safe_send(message.author,
+                                                    "What is the seating order? (separate users with line breaks)")
                 try:
                     order_message = await client.wait_for(
                         "message",
@@ -1116,11 +1128,11 @@ async def on_message(message):
                     )
 
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out.")
+                    await message_utils.safe_send(message.author, "Timed out.")
                     return
 
                 if order_message.content == "cancel":
-                    await safe_send(message.author, "Reseating cancelled!")
+                    await message_utils.safe_send(message.author, "Reseating cancelled!")
                     return
 
                 if order_message.content == "none":
@@ -1144,19 +1156,19 @@ async def on_message(message):
             # Cancels a nomination
             elif command == "cancelnomination":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to cancel nominations.")
+                    await message_utils.safe_send(message.author, "You don't have permission to cancel nominations.")
                     return
 
                 if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
+                    await message_utils.safe_send(message.author, "It's not day right now.")
                     return
 
                 if global_vars.game.days[-1].votes == [] or global_vars.game.days[-1].votes[-1].done == True:
-                    await safe_send(message.author, "There's no vote right now.")
+                    await message_utils.safe_send(message.author, "There's no vote right now.")
                     return
 
                 # Reset hand status for all players
@@ -1176,7 +1188,7 @@ async def on_message(message):
                 await current_nomination.delete()
                 await global_vars.game.days[-1].open_pms()
                 await global_vars.game.days[-1].open_noms()
-                await safe_send(global_vars.channel, "Nomination canceled!")
+                await message_utils.safe_send(global_vars.channel, "Nomination canceled!")
                 if global_vars.game is not NULL_GAME:
                     backup("current_game.pckl")
                 return
@@ -1184,21 +1196,22 @@ async def on_message(message):
             # Sets a deadline
             elif command == "setdeadline":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if global_vars.gamemaster_role not in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to set deadlines.")
+                    await message_utils.safe_send(message.author, "You don't have permission to set deadlines.")
                     return
 
                 if not global_vars.game.isDay:
-                    await safe_send(message.author, "It's not day right now.")
+                    await message_utils.safe_send(message.author, "It's not day right now.")
                     return
 
                 deadline = parse_deadline(argument)
 
                 if deadline is None:
-                    await safe_send(message.author, "Unrecognized format. Please provide a deadline in the format 'HH:MM', '+[HHh][MMm]', or a Unix timestamp.")
+                    await message_utils.safe_send(message.author,
+                                                  "Unrecognized format. Please provide a deadline in the format 'HH:MM', '+[HHh][MMm]', or a Unix timestamp.")
                     return
 
                 if len(global_vars.game.days[-1].deadlineMessages) > 0:
@@ -1211,7 +1224,7 @@ async def on_message(message):
                         print("Missing message: ", str(previous_deadline))
                     except discord.errors.DiscordServerError:
                         print("Discord server error: ", str(previous_deadline))
-                announcement = await safe_send(
+                announcement = await message_utils.safe_send(
                     global_vars.channel,
                     "{}, nominations are open. The deadline is <t:{}:R> at <t:{}:t> unless someone nominates or everyone skips.".format(
                         global_vars.player_role.mention,
@@ -1226,11 +1239,11 @@ async def on_message(message):
             # Gives a dead vote
             elif command == "givedeadvote":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to give dead votes.")
+                    await message_utils.safe_send(message.author, "You don't have permission to give dead votes.")
                     return
 
                 person = await select_player(
@@ -1247,11 +1260,11 @@ async def on_message(message):
             # Removes a dead vote
             elif command == "removedeadvote":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to remove dead votes.")
+                    await message_utils.safe_send(message.author, "You don't have permission to remove dead votes.")
                     return
 
                 person = await select_player(
@@ -1268,27 +1281,28 @@ async def on_message(message):
             # Sends a message tally
             elif command == "messagetally":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if global_vars.gamemaster_role not in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to report the message tally.")
+                    await message_utils.safe_send(message.author,
+                                                  "You don't have permission to report the message tally.")
                     return
 
                 if global_vars.game.days == []:
-                    await safe_send(message.author, "There have been no days.")
+                    await message_utils.safe_send(message.author, "There have been no days.")
                     return
 
                 try:
                     idn = int(argument)
                 except ValueError:
-                    await safe_send(message.author, "Invalid message ID: {}".format(argument))
+                    await message_utils.safe_send(message.author, "Invalid message ID: {}".format(argument))
                     return
 
                 try:
                     origin_msg = await global_vars.channel.fetch_message(idn)
                 except discord.errors.NotFound:
-                    await safe_send(message.author, "Message not found by ID: {}".format(argument))
+                    await message_utils.safe_send(message.author, "Message not found by ID: {}".format(argument))
                     return
 
                 message_tally = {
@@ -1314,13 +1328,13 @@ async def on_message(message):
                     else:
                         message_text += "\n> All other pairs: 0"
                         break
-                await safe_send(global_vars.channel, message_text)
+                await message_utils.safe_send(global_vars.channel, message_text)
             elif command == "whispers":
                 person = None
                 if global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
                     argument = argument.split(" ")
                     if len(argument) != 1:
-                        await safe_send(message.author, "Usage: @whispers <player>")
+                        await message_utils.safe_send(message.author, "Usage: @whispers <player>")
                         return
                     if len(argument) == 1:
                         person = await select_player(
@@ -1329,7 +1343,8 @@ async def on_message(message):
                 else:
                     person = await get_player(message.author)
                 if not person:
-                    await safe_send(message.author, "You are not in the game. You have no message history.")
+                    await message_utils.safe_send(message.author,
+                                                  "You are not in the game. You have no message history.")
                     return
 
                 # initialize counts with zero for all players
@@ -1342,7 +1357,7 @@ async def on_message(message):
                         message_text = "Day {}\n".format(day)
                         for player, count in counts.items():
                             message_text += "{}: {}\n".format(player if player == "Storytellers" else player.display_name, count)
-                        await safe_send(message.author, message_text)
+                        await message_utils.safe_send(message.author, message_text)
                         counts = OrderedDict([(player, 0) for player in global_vars.game.seatingOrder])
                         day = msg["day"]
                     if msg["from_player"] == person:
@@ -1359,59 +1374,63 @@ async def on_message(message):
                 message_text = "Day {}\n".format(day)
                 for player, count in counts.items():
                     message_text += "{}: {}\n".format(player if player == "Storytellers" else player.display_name, count)
-                await safe_send(message.author, message_text)
+                await message_utils.safe_send(message.author, message_text)
                 return
             elif command == "enabletally":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to enable tally.")
+                    await message_utils.safe_send(message.author, "You don't have permission to enable tally.")
                     return
                 global_vars.game.show_tally = True
                 for memb in global_vars.game.storytellers:
-                    await safe_send(memb.user, "The message tally has been enabled by {}.".format(message.author.display_name))
+                    await message_utils.safe_send(memb.user, "The message tally has been enabled by {}.".format(
+                        message.author.display_name))
             elif command == "disabletally":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to disable tally.")
+                    await message_utils.safe_send(message.author, "You don't have permission to disable tally.")
                     return
                 global_vars.game.show_tally = False
                 for memb in global_vars.game.storytellers:
-                    await safe_send(memb.user, "The message tally has been disabled by {}.".format(message.author.display_name))
+                    await message_utils.safe_send(memb.user, "The message tally has been disabled by {}.".format(
+                        message.author.display_name))
             # Views relevant information about a player
                 return
             # Views relevant information about a player
             elif command == "setatheist":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to configure the game.")
+                    await message_utils.safe_send(message.author, "You don't have permission to configure the game.")
                     return
 
                 # argument is true or false
                 global_vars.game.script.is_atheist = argument.lower() == "true" or argument.lower() == "t"
                 #  message storytellers that atheist game is set to false
                 for memb in global_vars.gamemaster_role.members:
-                    await safe_send(memb, "Atheist game is set to {} by {}".format(global_vars.game.script.is_atheist,
+                    await message_utils.safe_send(memb, "Atheist game is set to {} by {}".format(
+                        global_vars.game.script.is_atheist,
                                                                                    message.author.display_name))
                 pass
             elif command == "automatekills":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
                 if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to configure the game.")
+                    await message_utils.safe_send(message.author, "You don't have permission to configure the game.")
                     return
                 global_vars.game.has_automated_life_and_death = argument.lower() == "true" or argument.lower() == "t"
                 for memb in global_vars.gamemaster_role.members:
-                    await safe_send(memb, f"Automated life and death is set to {global_vars.game.has_automated_life_and_death} by {message.author.display_name}")
+                    await message_utils.safe_send(memb,
+                                                  f"Automated life and death is set to {global_vars.game.has_automated_life_and_death} by {message.author.display_name}")
 
                 pass
             # Views the grimoire
@@ -1431,15 +1450,15 @@ async def on_message(message):
             elif command == "nominate":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
+                    await message_utils.safe_send(message.author, "It's not day right now.")
                     return
 
                 if global_vars.game.days[-1].isNoms == False:
-                    await safe_send(message.author, "Nominations aren't open right now.")
+                    await message_utils.safe_send(message.author, "Nominations aren't open right now.")
                     return
 
                 nominator_player = await get_player(message.author)
@@ -1455,7 +1474,7 @@ async def on_message(message):
 
                 if not nominator_player:
                     if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                        await safe_send(message.author, "You aren't in the game, and so cannot nominate.")
+                        await message_utils.safe_send(message.author, "You aren't in the game, and so cannot nominate.")
                         return
                     else:
                         if len([
@@ -1466,7 +1485,7 @@ async def on_message(message):
                         ]) > 0:
                             # todo: ask if the nominee dies
                             st_user = message.author
-                            msg = await safe_send(st_user, "Do they die? yes or no")
+                            msg = await message_utils.safe_send(st_user, "Do they die? yes or no")
                             try:
                                 choice = await client.wait_for(
                                     "message",
@@ -1474,11 +1493,11 @@ async def on_message(message):
                                     timeout=200,
                                 )
                             except asyncio.TimeoutError:
-                                await safe_send(st_user, "Message timed out!")
+                                await message_utils.safe_send(st_user, "Message timed out!")
                                 return
                             # Cancel
                             if choice.content.lower() == "cancel":
-                                await safe_send(st_user, "Action cancelled!")
+                                await message_utils.safe_send(st_user, "Action cancelled!")
                                 return
                             player_dies = False
                             # Yes
@@ -1488,7 +1507,7 @@ async def on_message(message):
                             elif choice.content.lower() == "no" or choice.content.lower() == "n":
                                 player_dies = False
                             else:
-                                await safe_send(
+                                await message_utils.safe_send(
                                     st_user, "Your answer must be 'yes,' 'y,' 'no,' or 'n' exactly."
                                 )
                                 return
@@ -1496,24 +1515,25 @@ async def on_message(message):
                 else:
                     if global_vars.game.days[-1].riot_active:
                         if not nominator_player.riot_nominee:
-                            await safe_send(message.author, "Riot is active, you may not nominate.")
+                            await message_utils.safe_send(message.author, "Riot is active, you may not nominate.")
                             return
                     if nominator_player.is_ghost and not traveler_called and not nominator_player.riot_nominee and not banshee_override:
-                        await safe_send(
+                        await message_utils.safe_send(
                             message.author, "You are dead, and so cannot nominate."
                         )
                         return
                     if banshee_override and banshee_ability_of_player.remaining_nominations < 1:
-                        await safe_send(message.author, "You have already nominated twice.")
+                        await message_utils.safe_send(message.author, "You have already nominated twice.")
                         return
                     if not nominator_player.can_nominate and not traveler_called and not banshee_override:
-                        await safe_send(message.author, "You have already nominated.")
+                        await message_utils.safe_send(message.author, "You have already nominated.")
                         return
 
                 if global_vars.game.script.is_atheist:
                     if story_teller_is_nominated:
                         if None in [x.nominee for x in global_vars.game.days[-1].votes]:
-                            await safe_send(message.author, "The storytellers have already been nominated today.")
+                            await message_utils.safe_send(message.author,
+                                                          "The storytellers have already been nominated today.")
                             await message.unpin()
                             return
                         await global_vars.game.days[-1].nomination(None, nominator_player)
@@ -1533,7 +1553,8 @@ async def on_message(message):
 
                 #  make sure that the nominee has not been nominated yet
                 if not person.can_be_nominated:
-                    await safe_send(message.author, "{} has already been nominated".format(person.display_name))
+                    await message_utils.safe_send(message.author,
+                                                  "{} has already been nominated".format(person.display_name))
                     return
 
                 remove_banshee_nomination(banshee_ability_of_player)
@@ -1547,15 +1568,15 @@ async def on_message(message):
             elif command == "vote":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
+                    await message_utils.safe_send(message.author, "It's not day right now.")
                     return
 
                 if global_vars.game.days[-1].votes == [] or global_vars.game.days[-1].votes[-1].done == True:
-                    await safe_send(message.author, "There's no vote right now.")
+                    await message_utils.safe_send(message.author, "There's no vote right now.")
                     return
 
                 if (
@@ -1564,7 +1585,9 @@ async def on_message(message):
                     and argument != "no"
                     and argument != "n"
                 ):
-                    await safe_send(message.author, "{} is not a valid vote. Use 'yes', 'y', 'no', or 'n'.".format(argument))
+                    await message_utils.safe_send(message.author,
+                                                  "{} is not a valid vote. Use 'yes', 'y', 'no', or 'n'.".format(
+                                                      argument))
                     return
 
                 voudon_in_play = in_play_voudon()
@@ -1572,7 +1595,7 @@ async def on_message(message):
                 vote = global_vars.game.days[-1].votes[-1]
 
                 if global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    msg = await safe_send(message.author, "Whose vote is this?")
+                    msg = await message_utils.safe_send(message.author, "Whose vote is this?")
                     try:
                         reply = await client.wait_for(
                             "message",
@@ -1581,11 +1604,11 @@ async def on_message(message):
                         )
 
                     except asyncio.TimeoutError:
-                        await safe_send(message.author, "Timed out.")
+                        await message_utils.safe_send(message.author, "Timed out.")
                         return
 
                     if reply.content.lower() == "cancel":
-                        await safe_send(message.author, "Vote cancelled!")
+                        await message_utils.safe_send(message.author, "Vote cancelled!")
                         return
 
                     reply = reply.content.lower()
@@ -1597,13 +1620,15 @@ async def on_message(message):
                         return
 
                     if vote.order[vote.position].user != person.user:
-                        await safe_send(message.author, "It's not their vote right now. Do you mean @presetvote?")
+                        await message_utils.safe_send(message.author,
+                                                      "It's not their vote right now. Do you mean @presetvote?")
                         return
 
                     vt = int(argument == "yes" or argument == "y")
 
                     if voudon_in_play and voudon_in_play != person and not person.is_ghost and vt > 0:
-                        await safe_send(message.author, "Voudon is in play. Only the Voudon and dead may vote.")
+                        await message_utils.safe_send(message.author,
+                                                      "Voudon is in play. Only the Voudon and dead may vote.")
                         return
 
                     await vote.vote(vt, operator=message.author)
@@ -1613,13 +1638,15 @@ async def on_message(message):
 
                 voting_player = (await get_player(message.author))
                 if vote.order[vote.position].user != voting_player.user:
-                    await safe_send(message.author, "It's not your vote right now. Do you mean @presetvote?")
+                    await message_utils.safe_send(message.author,
+                                                  "It's not your vote right now. Do you mean @presetvote?")
                     return
 
                 vt = int(argument == "yes" or argument == "y")
 
                 if voudon_in_play and voting_player != voudon_in_play and not voting_player.is_ghost and vt > 0:
-                    await safe_send(message.author, "Voudon is in play. Only the Voudon and dead may vote.")
+                    await message_utils.safe_send(message.author,
+                                                  "Voudon is in play. Only the Voudon and dead may vote.")
                     return
 
                 await vote.vote(vt)
@@ -1631,15 +1658,15 @@ async def on_message(message):
             elif command == "presetvote" or command == "prevote":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
+                    await message_utils.safe_send(message.author, "It's not day right now.")
                     return
 
                 if global_vars.game.days[-1].votes == [] or global_vars.game.days[-1].votes[-1].done == True:
-                    await safe_send(message.author, "There's no vote right now.")
+                    await message_utils.safe_send(message.author, "There's no vote right now.")
                     return
 
                 # if player has active banshee ability then they can prevote 0, 1, or 2 as well
@@ -1650,14 +1677,16 @@ async def on_message(message):
                     and argument != "n"
                     and argument not in ["0", "1", "2"]
                 ):
-                    await safe_send(message.author, "{} is not a valid vote. Use 'yes', 'y', 'no', or 'n'.".format(argument))
+                    await message_utils.safe_send(message.author,
+                                                  "{} is not a valid vote. Use 'yes', 'y', 'no', or 'n'.".format(
+                                                      argument))
                     return
 
                 vote = global_vars.game.days[-1].votes[-1]
                 voudon_in_play = in_play_voudon()
 
                 if global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    msg = await safe_send(message.author, "Whose vote is this?")
+                    msg = await message_utils.safe_send(message.author, "Whose vote is this?")
                     try:
                         reply = await client.wait_for(
                             "message",
@@ -1666,11 +1695,11 @@ async def on_message(message):
                         )
 
                     except asyncio.TimeoutError:
-                        await safe_send(message.author, "Timed out.")
+                        await message_utils.safe_send(message.author, "Timed out.")
                         return
 
                     if reply.content.lower() == "cancel":
-                        await safe_send(message.author, "Preset vote cancelled!")
+                        await message_utils.safe_send(message.author, "Preset vote cancelled!")
                         return
 
                     reply = reply.content.lower()
@@ -1686,27 +1715,30 @@ async def on_message(message):
 
                     if argument in ["0", "1", "2"]:
                         if not banshee_override:
-                            await safe_send(message.author, "{} is not a valid vote for this player.".format(argument))
+                            await message_utils.safe_send(message.author,
+                                                          "{} is not a valid vote for this player.".format(argument))
                             return
                         vt = int(argument)
                     else:
                         yes_entered = argument == "yes" or argument == "y"
                         vt = int(yes_entered) * (2 if banshee_override else 1)
                     if voudon_in_play and person != voudon_in_play and not person.is_ghost and vt > 0:
-                        await safe_send(message.author, "Voudon is in play. Only the Voudon and dead may vote. Consider killing this player before prevoting yes.")
+                        await message_utils.safe_send(message.author,
+                                                      "Voudon is in play. Only the Voudon and dead may vote. Consider killing this player before prevoting yes.")
                         return
 
                     await vote.preset_vote(person, vt, operator=message.author)
                     if (banshee_override):
-                        await safe_send(message.author, "Successfully preset to {}!".format(vt))
+                        await message_utils.safe_send(message.author, "Successfully preset to {}!".format(vt))
                     else:
-                        await safe_send(message.author, "Successfully preset to {}!".format(argument))
+                        await message_utils.safe_send(message.author, "Successfully preset to {}!".format(argument))
                     if global_vars.game is not NULL_GAME:
                         backup("current_game.pckl")
 
                     # Prompt for hand status (Storyteller context)
                     try:
-                        hand_status_prompt_st = await safe_send(message.author, f"Hand up or down for {person.display_name}? (up/down/cancel)")
+                        hand_status_prompt_st = await message_utils.safe_send(message.author,
+                                                                              f"Hand up or down for {person.display_name}? (up/down/cancel)")
                         hand_status_choice_st = await client.wait_for(
                             "message",
                             check=(lambda x: x.author == message.author and x.channel == hand_status_prompt_st.channel),
@@ -1715,14 +1747,14 @@ async def on_message(message):
                         choice_content_st = hand_status_choice_st.content.lower()
                         if choice_content_st == "up":
                             person.hand_raised = True
-                            await safe_send(message.author, f"{person.display_name}'s hand is now up.")
+                            await message_utils.safe_send(message.author, f"{person.display_name}'s hand is now up.")
                         elif choice_content_st == "down":
                             person.hand_raised = False
-                            await safe_send(message.author, f"{person.display_name}'s hand is now down.")
+                            await message_utils.safe_send(message.author, f"{person.display_name}'s hand is now down.")
                         elif choice_content_st == "cancel":
-                            await safe_send(message.author, "Hand status change cancelled.")
+                            await message_utils.safe_send(message.author, "Hand status change cancelled.")
                         else:
-                            await safe_send(message.author, "Invalid choice. Hand status not changed.")
+                            await message_utils.safe_send(message.author, "Invalid choice. Hand status not changed.")
 
                         if choice_content_st in ["up", "down"]:
                             await global_vars.game.update_seating_order_message()
@@ -1730,7 +1762,7 @@ async def on_message(message):
                                 backup("current_game.pckl")
 
                     except asyncio.TimeoutError:
-                        await safe_send(message.author, "Timed out. Hand status not changed.")
+                        await message_utils.safe_send(message.author, "Timed out. Hand status not changed.")
                     except Exception as e:
                         logger.error(f"Error during hand status prompt for ST in presetvote: {e}")
                     return
@@ -1741,24 +1773,29 @@ async def on_message(message):
 
                 if argument in ["0", "1", "2"]:
                     if not banshee_override:
-                        await safe_send(message.author, "is not a valid vote. Use 'yes', 'y', 'no', or 'n'.".format(argument))
+                        await message_utils.safe_send(message.author,
+                                                      "is not a valid vote. Use 'yes', 'y', 'no', or 'n'.".format(
+                                                          argument))
                         return
                     vt = int(argument)
                 else:
                     vt = int(argument == "yes" or argument == "y")
 
                 if voudon_in_play and the_player != voudon_in_play and not the_player.is_ghost and vt > 0:
-                    await safe_send(message.author, "Voudon is in play. Only the Voudon and dead may vote. Wait to see if you die before voting yes.")
+                    await message_utils.safe_send(message.author,
+                                                  "Voudon is in play. Only the Voudon and dead may vote. Wait to see if you die before voting yes.")
                     return
 
                 await vote.preset_vote(the_player, vt)
-                await safe_send(message.author, "Successfully preset! For more nuanced presets, contact the storytellers.")
+                await message_utils.safe_send(message.author,
+                                              "Successfully preset! For more nuanced presets, contact the storytellers.")
                 if global_vars.game is not NULL_GAME:
                     backup("current_game.pckl")
 
                 # Prompt for hand status
                 try:
-                    hand_status_prompt = await safe_send(message.author, "Hand up or down? (up/down/cancel)")
+                    hand_status_prompt = await message_utils.safe_send(message.author,
+                                                                       "Hand up or down? (up/down/cancel)")
                     hand_status_choice = await client.wait_for(
                         "message",
                         check=(lambda x: x.author == message.author and x.channel == hand_status_prompt.channel),
@@ -1767,14 +1804,14 @@ async def on_message(message):
                     choice_content = hand_status_choice.content.lower()
                     if choice_content == "up":
                         the_player.hand_raised = True
-                        await safe_send(message.author, "Your hand is now up.")
+                        await message_utils.safe_send(message.author, "Your hand is now up.")
                     elif choice_content == "down":
                         the_player.hand_raised = False
-                        await safe_send(message.author, "Your hand is now down.")
+                        await message_utils.safe_send(message.author, "Your hand is now down.")
                     elif choice_content == "cancel":
-                        await safe_send(message.author, "Hand status change cancelled.")
+                        await message_utils.safe_send(message.author, "Hand status change cancelled.")
                     else:
-                        await safe_send(message.author, "Invalid choice. Hand status not changed.")
+                        await message_utils.safe_send(message.author, "Invalid choice. Hand status not changed.")
 
                     if choice_content in ["up", "down"]:
                         await global_vars.game.update_seating_order_message()
@@ -1782,7 +1819,7 @@ async def on_message(message):
                             backup("current_game.pckl")
 
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out. Hand status not changed.")
+                    await message_utils.safe_send(message.author, "Timed out. Hand status not changed.")
                 except Exception as e:
                     logger.error(f"Error during hand status prompt after presetvote: {e}")
                 return
@@ -1791,21 +1828,21 @@ async def on_message(message):
             elif command == "cancelpreset" or command == "cancelprevote":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
+                    await message_utils.safe_send(message.author, "It's not day right now.")
                     return
 
                 if global_vars.game.days[-1].votes == [] or global_vars.game.days[-1].votes[-1].done == True:
-                    await safe_send(message.author, "There's no vote right now.")
+                    await message_utils.safe_send(message.author, "There's no vote right now.")
                     return
 
                 vote = global_vars.game.days[-1].votes[-1]
 
                 if global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    msg = await safe_send(message.author, "Whose vote do you want to cancel?")
+                    msg = await message_utils.safe_send(message.author, "Whose vote do you want to cancel?")
                     try:
                         reply = await client.wait_for(
                             "message",
@@ -1814,11 +1851,11 @@ async def on_message(message):
                         )
 
                     except asyncio.TimeoutError:
-                        await safe_send(message.author, "Timed out.")
+                        await message_utils.safe_send(message.author, "Timed out.")
                         return
 
                     if reply.content.lower() == "cancel":
-                        await safe_send(message.author, "Cancelling preset cancelled!")
+                        await message_utils.safe_send(message.author, "Cancelling preset cancelled!")
                         return
 
                     reply = reply.content.lower()
@@ -1830,13 +1867,14 @@ async def on_message(message):
                         return
 
                     await vote.cancel_preset(person)
-                    await safe_send(message.author, "Successfully canceled!")
+                    await message_utils.safe_send(message.author, "Successfully canceled!")
                     if global_vars.game is not NULL_GAME:
                         backup("current_game.pckl")
 
                     # Prompt for hand status (Storyteller context)
                     try:
-                        hand_status_prompt_st = await safe_send(message.author, f"Hand up or down for {person.display_name}? (up/down/cancel)")
+                        hand_status_prompt_st = await message_utils.safe_send(message.author,
+                                                                              f"Hand up or down for {person.display_name}? (up/down/cancel)")
                         hand_status_choice_st = await client.wait_for(
                             "message",
                             check=(lambda x: x.author == message.author and x.channel == hand_status_prompt_st.channel),
@@ -1845,14 +1883,14 @@ async def on_message(message):
                         choice_content_st = hand_status_choice_st.content.lower()
                         if choice_content_st == "up":
                             person.hand_raised = True
-                            await safe_send(message.author, f"{person.display_name}'s hand is now up.")
+                            await message_utils.safe_send(message.author, f"{person.display_name}'s hand is now up.")
                         elif choice_content_st == "down":
                             person.hand_raised = False
-                            await safe_send(message.author, f"{person.display_name}'s hand is now down.")
+                            await message_utils.safe_send(message.author, f"{person.display_name}'s hand is now down.")
                         elif choice_content_st == "cancel":
-                            await safe_send(message.author, "Hand status change cancelled.")
+                            await message_utils.safe_send(message.author, "Hand status change cancelled.")
                         else:
-                            await safe_send(message.author, "Invalid choice. Hand status not changed.")
+                            await message_utils.safe_send(message.author, "Invalid choice. Hand status not changed.")
 
                         if choice_content_st in ["up", "down"]:
                             await global_vars.game.update_seating_order_message()
@@ -1860,20 +1898,22 @@ async def on_message(message):
                                 backup("current_game.pckl")
 
                     except asyncio.TimeoutError:
-                        await safe_send(message.author, "Timed out. Hand status not changed.")
+                        await message_utils.safe_send(message.author, "Timed out. Hand status not changed.")
                     except Exception as e:
                         logger.error(f"Error during hand status prompt for ST in cancelpreset: {e}")
                     return
 
                 the_player = await get_player(message.author)
                 await vote.cancel_preset(the_player)
-                await safe_send(message.author, "Successfully canceled! For more nuanced presets, contact the storytellers.")
+                await message_utils.safe_send(message.author,
+                                              "Successfully canceled! For more nuanced presets, contact the storytellers.")
                 if global_vars.game is not NULL_GAME:
                     backup("current_game.pckl")
 
                 # Prompt for hand status
                 try:
-                    hand_status_prompt = await safe_send(message.author, "Hand up or down? (up/down/cancel)")
+                    hand_status_prompt = await message_utils.safe_send(message.author,
+                                                                       "Hand up or down? (up/down/cancel)")
                     hand_status_choice = await client.wait_for(
                         "message",
                         check=(lambda x: x.author == message.author and x.channel == hand_status_prompt.channel),
@@ -1882,14 +1922,14 @@ async def on_message(message):
                     choice_content = hand_status_choice.content.lower()
                     if choice_content == "up":
                         the_player.hand_raised = True
-                        await safe_send(message.author, "Your hand is now up.")
+                        await message_utils.safe_send(message.author, "Your hand is now up.")
                     elif choice_content == "down":
                         the_player.hand_raised = False
-                        await safe_send(message.author, "Your hand is now down.")
+                        await message_utils.safe_send(message.author, "Your hand is now down.")
                     elif choice_content == "cancel":
-                        await safe_send(message.author, "Hand status change cancelled.")
+                        await message_utils.safe_send(message.author, "Hand status change cancelled.")
                     else:
-                        await safe_send(message.author, "Invalid choice. Hand status not changed.")
+                        await message_utils.safe_send(message.author, "Invalid choice. Hand status not changed.")
 
                     if choice_content in ["up", "down"]:
                         await global_vars.game.update_seating_order_message()
@@ -1897,33 +1937,38 @@ async def on_message(message):
                             backup("current_game.pckl")
 
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Timed out. Hand status not changed.")
+                    await message_utils.safe_send(message.author, "Timed out. Hand status not changed.")
                 except Exception as e:
                     logger.error(f"Error during hand status prompt after cancelpreset: {e}")
                 return
 
             elif command == "adjustvotes" or command == "adjustvote":
                 if global_vars.game is NULL_GAME or global_vars.gamemaster_role not in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "Command {} not recognized. For a list of commands, type @help.".format(command))
+                    await message_utils.safe_send(message.author,
+                                                  "Command {} not recognized. For a list of commands, type @help.".format(
+                                                      command))
                     return
                 argument = argument.split(" ")
                 if len(argument) != 3:
-                    await safe_send(message.author, "adjustvotes takes three arguments: `@adjustvotes amnesiac target multiplier`. For example `@adjustvotes alfred charlie 2`")
+                    await message_utils.safe_send(message.author,
+                                                  "adjustvotes takes three arguments: `@adjustvotes amnesiac target multiplier`. For example `@adjustvotes alfred charlie 2`")
                     return
                 try:
                     multiplier = int(argument[2])
                 except ValueError:
-                    await safe_send(message.author, "The third argument must be a whole number")
+                    await message_utils.safe_send(message.author, "The third argument must be a whole number")
                     return
                 amnesiac = await select_player(message.author, argument[0], global_vars.game.seatingOrder)
                 target_player = await select_player(message.author, argument[1], global_vars.game.seatingOrder)
                 if not amnesiac or not target_player:
                     return
                 if not isinstance(amnesiac.character, Amnesiac):
-                    await safe_send(message.author, "{} isn't an amnesiac".format(amnesiac.display_name))
+                    await message_utils.safe_send(message.author, "{} isn't an amnesiac".format(amnesiac.display_name))
                     return
                 amnesiac.character.enhance_votes(target_player, multiplier)
-                await safe_send(message.author, "Amnesiac {} is currently multiplying the vote of {} by a factor of {}".format(amnesiac.display_name, target_player.display_name, multiplier))
+                await message_utils.safe_send(message.author,
+                                              "Amnesiac {} is currently multiplying the vote of {} by a factor of {}".format(
+                                                  amnesiac.display_name, target_player.display_name, multiplier))
 
             # Set a default vote
             elif command == "defaultvote":
@@ -1934,15 +1979,16 @@ async def on_message(message):
                     if global_settings.get_default_vote(message.author.id):
                         global_settings.clear_default_vote(message.author.id)
                         global_settings.save()
-                        await safe_send(message.author, "Removed your default vote.")
+                        await message_utils.safe_send(message.author, "Removed your default vote.")
                     else:
-                        await safe_send(message.author, "You have no default vote to remove.")
+                        await message_utils.safe_send(message.author, "You have no default vote to remove.")
                     return
 
                 else:
                     argument = argument.split(" ")
                     if len(argument) > 2:
-                        await safe_send(message.author, "defaultvote takes at most two arguments: @defaultvote <vote = no> <time = 3600>")
+                        await message_utils.safe_send(message.author,
+                                                      "defaultvote takes at most two arguments: @defaultvote <vote = no> <time = 3600>")
                         return
                     elif len(argument) == 1:
                         try:
@@ -1953,42 +1999,47 @@ async def on_message(message):
                                 vt = argument[0] in ["yes", "y"]
                                 time = 3600
                             else:
-                                await safe_send(message.author, "{} is not a valid number of minutes or vote.".format(argument[0]))
+                                await message_utils.safe_send(message.author,
+                                                              "{} is not a valid number of minutes or vote.".format(
+                                                                  argument[0]))
                                 return
                     else:
                         if argument[0] in ["yes", "y", "no", "n"]:
                             vt = argument[0] in ["yes", "y"]
                         else:
-                            await safe_send(message.author, "{} is not a valid vote.".format(argument[0]))
+                            await message_utils.safe_send(message.author, "{} is not a valid vote.".format(argument[0]))
                             return
                         try:
                             time = int(argument[1]) * 60
                         except ValueError:
-                            await safe_send(message.author, "{} is not a valid number of minutes.".format(argument[1]))
+                            await message_utils.safe_send(message.author,
+                                                          "{} is not a valid number of minutes.".format(argument[1]))
                             return
 
                     global_settings.set_default_vote(message.author.id, vt, time)
                     global_settings.save()
-                    await safe_send(message.author, "Successfully set default {} vote at {} minutes.".format(["no", "yes"][vt], str(int(time / 60))))
+                    await message_utils.safe_send(message.author,
+                                                  "Successfully set default {} vote at {} minutes.".format(
+                                                      ["no", "yes"][vt], str(int(time / 60))))
                     return
 
             # Sends pm
             elif command == "pm" or command == "message":
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.game.isDay:
-                    await safe_send(message.author, "It's not day right now.")
+                    await message_utils.safe_send(message.author, "It's not day right now.")
                     return
 
                 if not global_vars.game.days[-1].isPms:  # Check if PMs open
-                    await safe_send(message.author, "PMs are closed.")
+                    await message_utils.safe_send(message.author, "PMs are closed.")
                     return
 
                 if not await get_player(message.author):
-                    await safe_send(message.author, "You are not in the game. You may not send messages.")
+                    await message_utils.safe_send(message.author, "You are not in the game. You may not send messages.")
                     return
 
                 candidates_for_whispers = await chose_whisper_candidates(global_vars.game, message.author)
@@ -2000,13 +2051,13 @@ async def on_message(message):
                     return
 
                 if person not in candidates_for_whispers:
-                    await safe_send(message.author, "You cannot whisper to this player at this time.")
+                    await message_utils.safe_send(message.author, "You cannot whisper to this player at this time.")
                     return
 
                 message_text = "Messaging {}. What would you like to send?".format(
                     person.display_name
                 )
-                reply = await safe_send(message.author, message_text)
+                reply = await message_utils.safe_send(message.author, message_text)
 
                 # Process reply
                 try:
@@ -2018,12 +2069,12 @@ async def on_message(message):
 
                 # Timeout
                 except asyncio.TimeoutError:
-                    await safe_send(message.author, "Message timed out!")
+                    await message_utils.safe_send(message.author, "Message timed out!")
                     return
 
                 # Cancel
                 if intendedMessage.content.lower() == "cancel":
-                    await safe_send(message.author, "Message canceled!")
+                    await message_utils.safe_send(message.author, "Message canceled!")
                     return
 
                 await person.message(
@@ -2040,7 +2091,7 @@ async def on_message(message):
             # Message history
             elif command == "history":
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 author_roles = global_vars.server.get_member(message.author.id).roles
@@ -2048,7 +2099,8 @@ async def on_message(message):
 
                     argument = argument.split(" ")
                     if len(argument) > 2:
-                        await safe_send(message.author, "There must be exactly one or two comma-separated inputs.")
+                        await message_utils.safe_send(message.author,
+                                                      "There must be exactly one or two comma-separated inputs.")
                         return
 
                     if len(argument) == 1:
@@ -2066,10 +2118,10 @@ async def on_message(message):
                         day = 1
                         for msg in person.message_history:
                             if len(message_text) > 1500:
-                                await safe_send(message.author, message_text)
+                                await message_utils.safe_send(message.author, message_text)
                                 message_text = ""
                             while msg["day"] != day:
-                                await safe_send(message.author, message_text)
+                                await message_utils.safe_send(message.author, message_text)
                                 day += 1
                                 message_text = "**Day {}:**".format(str(day))
                             message_text += (
@@ -2081,7 +2133,7 @@ async def on_message(message):
                                 )
                             )
 
-                        await safe_send(message.author, message_text)
+                        await message_utils.safe_send(message.author, message_text)
                         return
 
                     person1 = await select_player(
@@ -2107,11 +2159,11 @@ async def on_message(message):
                         ):
                             continue
                         if len(message_text) > 1500:
-                            await safe_send(message.author, message_text)
+                            await message_utils.safe_send(message.author, message_text)
                             message_text = ""
                         while msg["day"] != day:
                             if message_text != "":
-                                await safe_send(message.author, message_text)
+                                await message_utils.safe_send(message.author, message_text)
                             day += 1
                             message_text = "**Day {}:**".format(str(day))
                         message_text += "\nFrom: {} | To: {} | Time: {}\n**{}**".format(
@@ -2121,11 +2173,12 @@ async def on_message(message):
                             msg["content"],
                         )
 
-                    await safe_send(message.author, message_text)
+                    await message_utils.safe_send(message.author, message_text)
                     return
 
                 if not await get_player(message.author):
-                    await safe_send(message.author, "You are not in the game. You have no message history.")
+                    await message_utils.safe_send(message.author,
+                                                  "You are not in the game. You have no message history.")
                     return
 
                 person = await select_player(
@@ -2144,11 +2197,11 @@ async def on_message(message):
                     if not msg["from_player"] == person and not msg["to_player"] == person:
                         continue
                     if len(message_text) > 1500:
-                        await safe_send(message.author, message_text)
+                        await message_utils.safe_send(message.author, message_text)
                         message_text = ""
                     while msg["day"] != day:
                         if message_text != "":
-                            await safe_send(message.author, message_text)
+                            await message_utils.safe_send(message.author, message_text)
                         day += 1
                         message_text = "\n\n**Day {}:**".format(str(day))
                     message_text += "\nFrom: {} | To: {} | Time: {}\n**{}**".format(
@@ -2158,7 +2211,7 @@ async def on_message(message):
                         msg["content"],
                     )
 
-                await safe_send(message.author, message_text)
+                await message_utils.safe_send(message.author, message_text)
                 return
 
             # Message search
@@ -2168,29 +2221,30 @@ async def on_message(message):
             elif command == "handup" or command == "handdown":
                 player = await get_player(message.author)
                 if not player:
-                    await safe_send(message.author, "You are not a player in the game.")
+                    await message_utils.safe_send(message.author, "You are not a player in the game.")
                     return
 
                 if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
+                    await message_utils.safe_send(message.author, "There's no game right now.")
                     return
 
                 if not global_vars.game.isDay:
-                    await safe_send(message.author, "It's not day right now.")
+                    await message_utils.safe_send(message.author, "It's not day right now.")
                     return
 
                 if not global_vars.game.days[-1].votes or global_vars.game.days[-1].votes[-1].done:
-                    await safe_send(message.author, "You can only raise or lower your hand during an active vote.")
+                    await message_utils.safe_send(message.author,
+                                                  "You can only raise or lower your hand during an active vote.")
                     return
 
                 if player.hand_locked_for_vote:
-                    await safe_send(message.author,
+                    await message_utils.safe_send(message.author,
                                     "Your hand is currently locked by your vote and cannot be changed for this nomination.")
                     return
 
                 if command == "handdown":
                     player.hand_raised = False
-                    await safe_send(message.author, "Your hand is lowered.")
+                    await message_utils.safe_send(message.author, "Your hand is lowered.")
                     backup("current_game.pckl") # Backup for hand_raised change
                     await global_vars.game.update_seating_order_message()
 
@@ -2200,7 +2254,8 @@ async def on_message(message):
 
                     if active_vote:
                         try:
-                            prevote_prompt_msg = await safe_send(message.author, "Preset vote to YES, NO, or CANCEL existing prevote? (yes/no/cancel)")
+                            prevote_prompt_msg = await message_utils.safe_send(message.author,
+                                                                               "Preset vote to YES, NO, or CANCEL existing prevote? (yes/no/cancel)")
                             prevote_choice_msg = await client.wait_for(
                                 "message",
                                 check=(lambda x: x.author == message.author and x.channel == prevote_prompt_msg.channel),
@@ -2214,23 +2269,24 @@ async def on_message(message):
                                 if banshee_ability and banshee_ability.is_screaming:
                                     vt = 2
                                 await active_vote.preset_vote(player, vt)
-                                await safe_send(message.author, "Your vote has been preset to YES.")
+                                await message_utils.safe_send(message.author, "Your vote has been preset to YES.")
                                 if global_vars.game is not NULL_GAME:
                                     backup("current_game.pckl")
                             elif prevote_choice in ["no", "n"]:
                                 await active_vote.preset_vote(player, 0)
-                                await safe_send(message.author, "Your vote has been preset to NO.")
+                                await message_utils.safe_send(message.author, "Your vote has been preset to NO.")
                                 if global_vars.game is not NULL_GAME:
                                     backup("current_game.pckl")
                             elif prevote_choice == "cancel":
                                 await active_vote.cancel_preset(player)
-                                await safe_send(message.author, "Your preset vote has been cancelled.")
+                                await message_utils.safe_send(message.author, "Your preset vote has been cancelled.")
                                 if global_vars.game is not NULL_GAME:
                                     backup("current_game.pckl")
                             else:
-                                await safe_send(message.author, "Invalid prevote choice. Prevote not changed.")
+                                await message_utils.safe_send(message.author,
+                                                              "Invalid prevote choice. Prevote not changed.")
                         except asyncio.TimeoutError:
-                            await safe_send(message.author, "Timed out. Prevote not changed.")
+                            await message_utils.safe_send(message.author, "Timed out. Prevote not changed.")
                         except Exception as e:
                             logger.error(f"Error during prevote prompt after handdown: {e}")
                     return
@@ -2243,13 +2299,14 @@ async def on_message(message):
                 # Removed the check for preset_vote_value == 0 here
 
                 player.hand_raised = True
-                await safe_send(message.author, "Your hand is raised.") # Initial confirmation
+                await message_utils.safe_send(message.author, "Your hand is raised.")  # Initial confirmation
                 backup("current_game.pckl") # Backup for hand_raised change
                 await global_vars.game.update_seating_order_message()
 
                 if active_vote:
                     try:
-                        prevote_prompt_msg = await safe_send(message.author, "Preset vote to YES, NO, or CANCEL existing prevote? (yes/no/cancel)")
+                        prevote_prompt_msg = await message_utils.safe_send(message.author,
+                                                                           "Preset vote to YES, NO, or CANCEL existing prevote? (yes/no/cancel)")
                         prevote_choice_msg = await client.wait_for(
                             "message",
                             check=(lambda x: x.author == message.author and x.channel == prevote_prompt_msg.channel),
@@ -2263,23 +2320,24 @@ async def on_message(message):
                             if banshee_ability and banshee_ability.is_screaming:
                                 vt = 2 # Banshee scream with hand up is a 'yes' vote of 2
                             await active_vote.preset_vote(player, vt)
-                            await safe_send(message.author, "Your vote has been preset to YES.")
+                            await message_utils.safe_send(message.author, "Your vote has been preset to YES.")
                             if global_vars.game is not NULL_GAME:
                                 backup("current_game.pckl")
                         elif prevote_choice in ["no", "n"]:
                             await active_vote.preset_vote(player, 0)
-                            await safe_send(message.author, "Your vote has been preset to NO.")
+                            await message_utils.safe_send(message.author, "Your vote has been preset to NO.")
                             if global_vars.game is not NULL_GAME:
                                 backup("current_game.pckl")
                         elif prevote_choice == "cancel":
                             await active_vote.cancel_preset(player)
-                            await safe_send(message.author, "Your preset vote has been cancelled.")
+                            await message_utils.safe_send(message.author, "Your preset vote has been cancelled.")
                             if global_vars.game is not NULL_GAME:
                                 backup("current_game.pckl")
                         else:
-                            await safe_send(message.author, "Invalid prevote choice. Prevote not changed.")
+                            await message_utils.safe_send(message.author,
+                                                          "Invalid prevote choice. Prevote not changed.")
                     except asyncio.TimeoutError:
-                        await safe_send(message.author, "Timed out. Prevote not changed.")
+                        await message_utils.safe_send(message.author, "Timed out. Prevote not changed.")
                     except Exception as e:
                         logger.error(f"Error during prevote prompt after handup: {e}")
                 return
@@ -2742,14 +2800,16 @@ async def on_message(message):
 
             # Command unrecognized
             else:
-                await safe_send(message.author, "Command {} not recognized. For a list of commands, type @help.".format(command))
+                await message_utils.safe_send(message.author,
+                                              "Command {} not recognized. For a list of commands, type @help.".format(
+                                                  command))
 
 
 async def warn_missing_player_channels(channel_to_send, players_missing_channels):
     plural = len(players_missing_channels) > 1
     chan = "channels" if plural else "a channel"
     playz = "those players" if plural else "that player"
-    await safe_send(channel_to_send,
+    await message_utils.safe_send(channel_to_send,
                     f"Missing {chan} for: {', '.join([x.display_name for x in players_missing_channels])}.  Please run `@welcome` for {playz} to create {chan} for them.")
 
 
@@ -2764,12 +2824,12 @@ async def check_and_print_if_one_or_zero_to_check_in():
     ]
     if len(not_checked_in) == 1:
         for memb in global_vars.gamemaster_role.members:
-            await safe_send(
+            await message_utils.safe_send(
                 memb, f"Just waiting on {not_checked_in[0].display_name} to check in."
             )
     if len(not_checked_in) == 0:
         for memb in global_vars.gamemaster_role.members:
-            await safe_send(memb, "Everyone has checked in!")
+            await message_utils.safe_send(memb, "Everyone has checked in!")
 
 
 from model.game.vote import is_storyteller
@@ -2791,22 +2851,22 @@ async def on_message_edit(before, after):
             argument = after.content.lower()[after.content.lower().index("nominate ") + 9:]
 
             if global_vars.game is NULL_GAME:
-                await safe_send(global_vars.channel, "There's no game right now.")
+                await message_utils.safe_send(global_vars.channel, "There's no game right now.")
                 await after.unpin()
                 return
 
             if global_vars.game.isDay == False:
-                await safe_send(global_vars.channel, "It's not day right now.")
+                await message_utils.safe_send(global_vars.channel, "It's not day right now.")
                 await after.unpin()
                 return
 
             if global_vars.game.days[-1].isNoms == False:
-                await safe_send(global_vars.channel, "Nominations aren't open right now.")
+                await message_utils.safe_send(global_vars.channel, "Nominations aren't open right now.")
                 await after.unpin()
                 return
 
             if not message_author_player:
-                await safe_send(
+                await message_utils.safe_send(
                     global_vars.channel, "You aren't in the game, and so cannot nominate."
                 )
                 await after.unpin()
@@ -2819,19 +2879,19 @@ async def on_message_edit(before, after):
             banshee_override = banshee_ability_of_player and banshee_ability_of_player.is_screaming and not banshee_ability_of_player.is_poisoned
 
             if message_author_player.is_ghost and not traveler_called and not message_author_player.riot_nominee and not banshee_override:
-                await safe_send(global_vars.channel, "You are dead, and so cannot nominate.")
+                await message_utils.safe_send(global_vars.channel, "You are dead, and so cannot nominate.")
                 await after.unpin()
                 return
             if (banshee_override and banshee_ability_of_player.remaining_nominations < 1) and not traveler_called:
-                await safe_send(global_vars.channel, "You have already nominated twice.")
+                await message_utils.safe_send(global_vars.channel, "You have already nominated twice.")
                 await after.unpin()
                 return
             if global_vars.game.days[-1].riot_active and not message_author_player.riot_nominee:
-                await safe_send(global_vars.channel, "Riot is active. It is not your turn to nominate.")
+                await message_utils.safe_send(global_vars.channel, "Riot is active. It is not your turn to nominate.")
                 await after.unpin()
                 return
             if not (message_author_player).can_nominate and not traveler_called and not banshee_override:
-                await safe_send(global_vars.channel, "You have already nominated.")
+                await message_utils.safe_send(global_vars.channel, "You have already nominated.")
                 await after.unpin()
                 return
 
@@ -2839,7 +2899,7 @@ async def on_message_edit(before, after):
                 storyteller_nomination = await is_storyteller(argument)
                 if storyteller_nomination:
                     if None in [x.nominee for x in global_vars.game.days[-1].votes]:
-                        await safe_send(
+                        await message_utils.safe_send(
                             global_vars.channel,
                             "The storytellers have already been nominated today.",
                         )
@@ -2855,7 +2915,7 @@ async def on_message_edit(before, after):
             if len(names) == 1:
 
                 if not names[0].can_be_nominated:
-                    await safe_send(
+                    await message_utils.safe_send(
                         global_vars.channel, "{} has already been nominated.".format(names[0].display_name)
                     )
                     await after.unpin()
@@ -2871,13 +2931,13 @@ async def on_message_edit(before, after):
 
             elif len(names) > 1:
 
-                await safe_send(global_vars.channel, "There are too many matching players.")
+                await message_utils.safe_send(global_vars.channel, "There are too many matching players.")
                 await after.unpin()
                 return
 
             else:
 
-                await safe_send(global_vars.channel, "There are no matching players.")
+                await message_utils.safe_send(global_vars.channel, "There are no matching players.")
                 await after.unpin()
                 return
 
@@ -2885,19 +2945,19 @@ async def on_message_edit(before, after):
         elif "skip" in after.content.lower():
 
             if global_vars.game is NULL_GAME:
-                await safe_send(global_vars.channel, "There's no game right now.")
+                await message_utils.safe_send(global_vars.channel, "There's no game right now.")
                 await after.unpin()
                 return
 
             if not message_author_player:
-                await safe_send(
+                await message_utils.safe_send(
                     global_vars.channel, "You aren't in the game, and so cannot nominate."
                 )
                 await after.unpin()
                 return
 
             if not global_vars.game.isDay:
-                await safe_send(global_vars.channel, "It's not day right now.")
+                await message_utils.safe_send(global_vars.channel, "It's not day right now.")
                 await after.unpin()
                 return
 
@@ -2915,7 +2975,7 @@ async def on_message_edit(before, after):
             ]
             if len(can_nominate) == 1:
                 for memb in global_vars.gamemaster_role.members:
-                    await safe_send(
+                    await message_utils.safe_send(
                         memb,
                         "Just waiting on {} to nominate or skip.".format(
                             can_nominate[0].display_name
@@ -2923,7 +2983,7 @@ async def on_message_edit(before, after):
                     )
             if len(can_nominate) == 0:
                 for memb in global_vars.gamemaster_role.members:
-                    await safe_send(memb, "Everyone has nominated or skipped!")
+                    await message_utils.safe_send(memb, "Everyone has nominated or skipped!")
 
             global_vars.game.days[-1].skipMessages.append(after.id)
 
@@ -2953,7 +3013,7 @@ async def on_member_update(before, after):
         if player and player.display_name != after.display_name:
             player.display_name = after.display_name
             await global_vars.game.reseat(global_vars.game.seatingOrder)
-            await safe_send(after, "Your nickname has been updated.")
+            await message_utils.safe_send(after, "Your nickname has been updated.")
             backup("current_game.pckl")
 
         if global_vars.gamemaster_role in after.roles and global_vars.gamemaster_role not in before.roles:
