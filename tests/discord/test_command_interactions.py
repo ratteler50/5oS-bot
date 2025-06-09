@@ -11,7 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 import global_vars
-from bot_impl import Vote, on_message
+from bot_impl import on_message
+from model.game.vote import Vote
 # Import test fixtures from shared fixtures
 from tests.fixtures.discord_mocks import (
     MockChannel, MockMessage, mock_discord_setup
@@ -1073,7 +1074,7 @@ async def test_grimoire_command(mock_discord_setup, setup_test_game):
 
     # Test grimoire command
     with patch('bot_impl.backup', return_value=None):
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('commands.info_status_commands.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Mock pretty_player_list method
             original_pretty_player_list = None
             if hasattr(setup_test_game['game'], 'pretty_player_list'):
@@ -1164,7 +1165,7 @@ async def test_tocheckin_command(mock_discord_setup, setup_test_game):
 
     # Test tocheckin command
     with patch('bot_impl.backup', return_value=None):
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('commands.status_commands.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Process the tocheckin command
             from bot_impl import on_message
             with patch.object(global_vars.server, 'get_member') as mock_get_member:
@@ -1195,7 +1196,7 @@ async def test_search_command(mock_discord_setup, setup_test_game):
 
     # Test search command
     with patch('bot_impl.backup', return_value=None):
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('commands.utility_commands.safe_send', return_value=AsyncMock()) as mock_safe_send:
             # Process the search command
             await on_message(search_message)
 

@@ -1547,7 +1547,7 @@ async def test_on_message_direct_utility_commands(mock_discord_setup, setup_test
         author=mock_discord_setup['members']['storyteller']
     )
 
-    with patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_safe_send:
+    with patch('commands.info_status_commands.safe_send', new_callable=AsyncMock) as mock_safe_send:
         await on_message(grimoire_message)
 
         # Verify a grimoire message was sent
@@ -1577,7 +1577,7 @@ async def test_on_message_direct_utility_commands(mock_discord_setup, setup_test
         }
     ]
 
-    with patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_safe_send:
+    with patch('commands.utility_commands.safe_send', new_callable=AsyncMock) as mock_safe_send:
         await on_message(search_message)
 
         # Verify search results were sent
@@ -1614,7 +1614,7 @@ async def test_on_message_direct_utility_commands(mock_discord_setup, setup_test
         author=mock_discord_setup['members']['storyteller']
     )
 
-    with patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_safe_send:
+    with patch('commands.utility_commands.safe_send', new_callable=AsyncMock) as mock_safe_send:
         await on_message(clear_message)
 
         # Verify clearing message was sent

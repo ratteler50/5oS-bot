@@ -11,7 +11,8 @@ import pytest
 
 import global_vars
 from bot_client import client
-from bot_impl import Vote, on_message
+from bot_impl import on_message
+from model.game.vote import Vote
 # Import test fixtures from fixtures directory
 from tests.fixtures.command_testing import run_command_storyteller
 from tests.fixtures.discord_mocks import MockChannel, MockMessage, mock_discord_setup
@@ -994,7 +995,7 @@ async def test_info_command_enhancements(mock_discord_setup, setup_test_game):
     elif not game.isDay: # If a day exists but it's night, start a new day
         await game.start_day()
 
-    with patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_safe_send, \
+    with patch('commands.info_status_commands.safe_send', new_callable=AsyncMock) as mock_safe_send, \
             patch('bot_impl.backup') as mock_backup:
         # Scenario 1: No active vote
         game.days[-1].votes = []

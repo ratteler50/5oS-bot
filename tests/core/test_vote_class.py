@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 import global_vars
-from bot_impl import Vote
+from model.game.vote import Vote
 from tests.fixtures.discord_mocks import mock_discord_setup, create_mock_message
 from tests.fixtures.game_fixtures import setup_test_game, setup_test_vote
 

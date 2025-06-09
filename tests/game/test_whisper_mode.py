@@ -204,7 +204,8 @@ async def test_chose_whisper_candidates_edge_case_circular(mock_get_player):
 async def test_whisper_mode_transitions():
     """Test that whisper mode changes correctly during game phase transitions."""
     # Import game classes
-    from bot_impl import Game, Vote
+    from model.game.game import Game
+    from model.game.vote import Vote
     from model.game import Day
     import global_vars
 

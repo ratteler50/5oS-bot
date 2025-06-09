@@ -12,7 +12,8 @@ import discord
 import pytest
 
 import global_vars
-from bot_impl import on_message, Vote
+from bot_impl import on_message
+from model.game.vote import Vote
 from tests.fixtures.command_testing import run_command_vote
 # Import test fixtures from fixtures directory
 from tests.fixtures.discord_mocks import MockMessage, mock_discord_setup
@@ -609,7 +610,8 @@ async def test_player_info_command(mock_discord_setup, setup_test_game):
     with patch('bot_impl.is_storyteller', return_value=True):
         with patch('bot_impl.select_player', return_value=bob):
             with patch('bot_impl.backup'):
-                with patch('utils.message_utils.safe_send', new_callable=AsyncMock) as mock_utils_safe_send, \
+                with patch('commands.info_status_commands.safe_send',
+                           new_callable=AsyncMock) as mock_commands_safe_send, \
                         patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_bot_safe_send:
                     # Create a message object
                     message = MockMessage(
@@ -624,7 +626,7 @@ async def test_player_info_command(mock_discord_setup, setup_test_game):
                     await on_message(message)
 
                     # Verify info response was sent (using either implementation)
-                    assert mock_utils_safe_send.called or mock_bot_safe_send.called
+                    assert mock_commands_safe_send.called or mock_bot_safe_send.called
 
                     # In a real implementation, the response would contain Bob's player info
 

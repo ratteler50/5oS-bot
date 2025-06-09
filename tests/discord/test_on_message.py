@@ -595,7 +595,7 @@ async def test_makealias_command(mock_discord_setup):
     # Process the message
     with patch('bot_impl.backup') as mock_backup:
         with patch('model.settings.global_settings.GlobalSettings.load', return_value=mock_global_settings):
-            with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+            with patch('commands.utility_commands.safe_send', return_value=AsyncMock()) as mock_safe_send:
                 # Execute the message handling function
                 await on_message(alice_message)
 
@@ -741,7 +741,7 @@ async def test_clear_command(mock_discord_setup):
 
     # Process the message
     with patch('bot_impl.backup') as mock_backup:
-        with patch('bot_impl.safe_send', return_value=AsyncMock()) as mock_safe_send:
+        with patch('commands.utility_commands.safe_send', return_value=AsyncMock()) as mock_safe_send:
             await on_message(alice_message)
 
             # Verify clearing message was sent

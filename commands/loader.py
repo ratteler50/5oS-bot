@@ -12,6 +12,9 @@ def load_all_commands():
         "commands.admin_commands",
         "commands.status_commands",
         "commands.seating_commands",
+        "commands.info_status_commands",
+        "commands.utility_commands",
+        # "commands.voting_commands",  # TODO: enable after implementing
     ]
 
     for module_name in command_modules:

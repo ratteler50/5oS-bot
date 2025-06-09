@@ -12,7 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 import global_vars
-from bot_impl import on_message, Vote
+from bot_impl import on_message
+from model.game.vote import Vote
 from tests.fixtures.common_patches import (
     file_operation_patches
 )
