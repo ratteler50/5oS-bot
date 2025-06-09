@@ -46,6 +46,20 @@ class CommandRegistry:
         """Get all registered commands."""
         return self.commands.copy()
 
+    def log_registered_commands(self, logger):
+        """Log all registered commands at startup."""
+        command_list = sorted(self.commands.keys())
+        alias_info = []
+
+        for alias, command in self.aliases.items():
+            alias_info.append(f"{alias} -> {command}")
+
+        logger.info(f"📋 Command Registry: {len(command_list)} commands registered")
+        logger.info(f"Commands: {', '.join(command_list)}")
+
+        if alias_info:
+            logger.info(f"Aliases: {', '.join(alias_info)}")
+
 
 # Global registry instance
 registry = CommandRegistry()

@@ -24,7 +24,7 @@ from model.characters import Character, AbilityModifier, Amnesiac, Minion, Demon
 from model.game.game import Game, NULL_GAME
 from model.game.script import Script
 from model.game.vote import Vote, in_play_voudon, remove_banshee_nomination
-from model.game.whisper_mode import to_whisper_mode, chose_whisper_candidates
+from model.game.whisper_mode import chose_whisper_candidates
 from model.player import Player, STORYTELLER_ALIGNMENT
 from model.settings import GlobalSettings, GameSettings
 from time_utils import parse_deadline
@@ -395,6 +395,10 @@ async def on_ready():
         print("No backup found.")
 
     await update_presence(client)
+
+    # Log all registered commands
+    registry.log_registered_commands(logger)
+    
     print("Logged in as")
     print(client.user.name)
     print(client.user.id)
@@ -514,136 +518,6 @@ async def on_message(message):
                 return
 
             # Legacy command handling - gradually move these to registry
-            if command == "openpms":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to open PMs.")
-                    return
-
-                if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
-                    return
-
-                await global_vars.game.days[-1].open_pms()
-                if global_vars.game is not NULL_GAME:
-                    backup("current_game.pckl")
-
-            # Opens nominations
-            elif command == "opennoms":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to open nominations.")
-                    return
-
-                if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
-                    return
-
-                await global_vars.game.days[-1].open_noms()
-                if global_vars.game is not NULL_GAME:
-                    backup("current_game.pckl")
-
-            # Opens pms and nominations
-            elif command == "open":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to open PMs and nominations.")
-                    return
-
-                if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
-                    return
-
-                await global_vars.game.days[-1].open_pms()
-                await global_vars.game.days[-1].open_noms()
-                if global_vars.game is not NULL_GAME:
-                    backup("current_game.pckl")
-
-            # Closes pms
-            elif command == "closepms":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to close PMs.")
-                    return
-
-                if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
-                    return
-
-                await global_vars.game.days[-1].close_pms()
-                if global_vars.game is not NULL_GAME:
-                    backup("current_game.pckl")
-
-            # Closes nominations
-            elif command == "closenoms":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to close nominations.")
-                    return
-
-                if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
-                    return
-
-                await global_vars.game.days[-1].close_noms()
-                if global_vars.game is not NULL_GAME:
-                    backup("current_game.pckl")
-
-            # set whisper mode
-            elif command == "whispermode":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to change the whispermode.")
-                    return
-
-                new_mode = to_whisper_mode(argument)
-
-                if (new_mode):
-                    global_vars.game.whisper_mode = new_mode
-                    await update_presence(client)
-                    #  for each gamemaster let them know
-                    for memb in global_vars.gamemaster_role.members:
-                        await safe_send(memb, "{} has set whisper mode to {}.".format(message.author.display_name, global_vars.game.whisper_mode))
-                else:
-                    await safe_send(message.author, "Invalid whisper mode: {}\nUsage is `@whispermode [all/neighbors/storytellers]`".format(argument))
-            # Closes pms and nominations
-            elif command == "close":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to close PMs and nominations.")
-                    return
-
-                if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
-                    return
-
-                await global_vars.game.days[-1].close_pms()
-                await global_vars.game.days[-1].close_noms()
-                if global_vars.game is not NULL_GAME:
-                    backup("current_game.pckl")
-                return
-
             # Welcomes players
             elif command == "welcome":
                 player = await select_player(message.author, argument, global_vars.server.members)
