@@ -14,6 +14,8 @@ from discord import User, Member, TextChannel
 
 import global_vars
 from bot_client import client, logger
+from commands.loader import load_all_commands
+from commands.registry import registry
 from config import *
 from model.channels import ChannelManager
 from model.channels.channel_utils import reorder_channels
@@ -29,6 +31,9 @@ from time_utils import parse_deadline
 from utils.character_utils import the_ability
 from utils.message_utils import safe_send
 from utils.player_utils import check_and_print_if_one_or_zero_to_check_in
+
+# Load all commands into the registry
+load_all_commands()
 
 ### API Stuff
 try:
@@ -504,7 +509,11 @@ async def on_message(message):
             if alias:
                 command = alias
 
-            # Opens pms
+            # Try to handle command using the registry
+            if await registry.handle_command(command, message, argument):
+                return
+
+            # Legacy command handling - gradually move these to registry
             if command == "openpms":
                 if global_vars.game is NULL_GAME:
                     await safe_send(message.author, "There's no game right now.")
