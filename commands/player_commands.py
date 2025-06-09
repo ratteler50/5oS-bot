@@ -131,6 +131,51 @@ async def revive_player(message: discord.Message, argument: str):
 #     """Change a player's ability."""  
 #     # Extract logic from bot_impl.py
 
+@registry.command("poison")
+async def poison_player(message: discord.Message, argument: str):
+    """Poison a player."""
+    if global_vars.game is NULL_GAME:
+        await safe_send(message.author, "There's no game right now.")
+        return
+
+    if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
+        await safe_send(message.author, "You don't have permission to poison players.")
+        return
+
+    from bot_impl import select_player
+    person = await select_player(
+        message.author, argument, global_vars.game.seatingOrder
+    )
+    if person is None:
+        return
+
+    person.character.poison()
+
+    await safe_send(message.author, "Successfully poisoned {}!".format(person.display_name))
+
+
+@registry.command("unpoison")
+async def unpoison_player(message: discord.Message, argument: str):
+    """Remove poison from a player."""
+    if global_vars.game is NULL_GAME:
+        await safe_send(message.author, "There's no game right now.")
+        return
+
+    if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
+        await safe_send(message.author, "You don't have permission to revive players.")
+        return
+
+    from bot_impl import select_player
+    person = await select_player(
+        message.author, argument, global_vars.game.seatingOrder
+    )
+    if person is None:
+        return
+
+    person.character.unpoison()
+    await safe_send(message.author, "Successfully unpoisoned {}!".format(person.display_name))
+
+
 # @registry.command("removeability")
 # async def remove_ability(message: discord.Message, argument: str):
 #     """Remove a player's ability."""

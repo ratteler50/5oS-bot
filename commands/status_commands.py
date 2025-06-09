@@ -214,3 +214,52 @@ async def can_nominate(message: discord.Message, argument: str):
         message_text += "\n{}".format(player.display_name)
 
     await safe_send(message.author, message_text)
+
+
+@registry.command("canbenominated")
+async def can_be_nominated(message: discord.Message, argument: str):
+    """Show players who can still be nominated."""
+    if global_vars.game is NULL_GAME:
+        await safe_send(message.author, "There's no game right now.")
+        return
+
+    if global_vars.game.isDay == False:
+        await safe_send(message.author, "It's not day right now.")
+        return
+
+    can_be_nominated = [
+        player
+        for player in global_vars.game.seatingOrder
+        if player.can_be_nominated == True
+    ]
+    if can_be_nominated == []:
+        await safe_send(message.author, "Everyone has been nominated!")
+        return
+
+    message_text = "These players have not been nominated:"
+    for player in can_be_nominated:
+        message_text += "\n{}".format(player.display_name)
+
+    await safe_send(message.author, message_text)
+
+
+@registry.command("lastactive")
+async def last_active(message: discord.Message, argument: str):
+    """Show when players were last active."""
+    if global_vars.game is NULL_GAME:
+        await safe_send(message.author, "There's no game right now.")
+        return
+
+    author_roles = global_vars.server.get_member(message.author.id).roles
+    if global_vars.gamemaster_role not in author_roles and global_vars.observer_role not in author_roles:
+        await safe_send(message.author, "You don't have permission to view player information.")
+        return
+
+    last_active = sorted(global_vars.game.seatingOrder, key=lambda p: p.last_active)
+    message_text = "Last active time for these players:"
+    for player in last_active:
+        last_active_str = str(int(player.last_active))
+        message_text += "\n{}:<t:{}:R> at <t:{}:t>".format(
+            player.display_name, last_active_str, last_active_str)
+
+    await safe_send(message.author, message_text)

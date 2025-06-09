@@ -1139,45 +1139,7 @@ async def on_message(message):
                 return
 
             # Poisons
-            elif command == "poison":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
 
-                if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to poison players.")
-                    return
-
-                person = await select_player(
-                    message.author, argument, global_vars.game.seatingOrder
-                )
-                if person is None:
-                    return
-
-                person.character.poison()
-
-                await safe_send(message.author, "Successfully poisoned {}!".format(person.display_name))
-                return
-
-            # Unpoisons
-            elif command == "unpoison":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                if not global_vars.gamemaster_role in global_vars.server.get_member(message.author.id).roles:
-                    await safe_send(message.author, "You don't have permission to revive players.")
-                    return
-
-                person = await select_player(
-                    message.author, argument, global_vars.game.seatingOrder
-                )
-                if person is None:
-                    return
-
-                person.character.unpoison()
-                await safe_send(message.author, "Successfully unpoisoned {}!".format(person.display_name))
-                return
 
             # Cancels a nomination
             elif command == "cancelnomination":
@@ -1462,52 +1424,8 @@ async def on_message(message):
             # Checks who can nominate
 
             # Checks who can be nominated
-            elif command == "canbenominated":
-
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                if global_vars.game.isDay == False:
-                    await safe_send(message.author, "It's not day right now.")
-                    return
-
-                can_be_nominated = [
-                    player
-                    for player in global_vars.game.seatingOrder
-                    if player.can_be_nominated == True
-                ]
-                if can_be_nominated == []:
-                    await safe_send(message.author, "Everyone has been nominated!")
-                    return
-
-                message_text = "These players have not been nominated:"
-                for player in can_be_nominated:
-                    message_text += "\n{}".format(player.display_name)
-
-                await safe_send(message.author, message_text)
-                return
 
             # Checks when a given player was last active
-            elif command == "lastactive":
-                if global_vars.game is NULL_GAME:
-                    await safe_send(message.author, "There's no game right now.")
-                    return
-
-                author_roles = global_vars.server.get_member(message.author.id).roles
-                if global_vars.gamemaster_role not in author_roles and global_vars.observer_role not in author_roles:
-                    await safe_send(message.author, "You don't have permission to view player information.")
-                    return
-
-                last_active = sorted(global_vars.game.seatingOrder, key=lambda p: p.last_active)
-                message_text = "Last active time for these players:"
-                for player in last_active:
-                    last_active_str = str(int(player.last_active))
-                    message_text += "\n{}:<t:{}:R> at <t:{}:t>".format(
-                        player.display_name, last_active_str, last_active_str)
-
-                await safe_send(message.author, message_text)
-                return
 
             # Nominates
             elif command == "nominate":

@@ -775,7 +775,7 @@ async def test_player_poisoned_status(mock_discord_setup, setup_test_game):
     with patch('bot_impl.is_storyteller', return_value=True):
         with patch('bot_impl.select_player', return_value=alice):
             with patch('bot_impl.backup'):
-                with patch('utils.message_utils.safe_send', new_callable=AsyncMock) as mock_utils_safe_send, \
+                with patch('commands.player_commands.safe_send', new_callable=AsyncMock) as mock_commands_safe_send, \
                         patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_bot_safe_send:
                     # Create a message object
                     message = MockMessage(
@@ -796,13 +796,13 @@ async def test_player_poisoned_status(mock_discord_setup, setup_test_game):
                     assert alice.is_poisoned is True
 
                     # Verify confirmation message was sent (using either implementation)
-                    assert mock_utils_safe_send.called or mock_bot_safe_send.called
+                    assert mock_commands_safe_send.called or mock_bot_safe_send.called
 
     # Test unpoisoning a player using the unpoison command
     with patch('bot_impl.is_storyteller', return_value=True):
         with patch('bot_impl.select_player', return_value=alice):
             with patch('bot_impl.backup'):
-                with patch('utils.message_utils.safe_send', new_callable=AsyncMock) as mock_utils_safe_send, \
+                with patch('commands.player_commands.safe_send', new_callable=AsyncMock) as mock_commands_safe_send, \
                         patch('bot_impl.safe_send', new_callable=AsyncMock) as mock_bot_safe_send:
                     # Create a message object
                     message = MockMessage(
@@ -823,7 +823,7 @@ async def test_player_poisoned_status(mock_discord_setup, setup_test_game):
                     assert alice.is_poisoned is False
 
                     # Verify confirmation message was sent (using either implementation)
-                    assert mock_utils_safe_send.called or mock_bot_safe_send.called
+                    assert mock_commands_safe_send.called or mock_bot_safe_send.called
 
 
 @pytest.mark.asyncio
