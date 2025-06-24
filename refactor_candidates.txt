@@ -1,0 +1,136 @@
+## Bot Implementation Refactor Candidates
+
+Below is a ranked list of commands from `bot_impl.py` that are candidates for refactoring into the command registry system. The ranking is based on perceived ease of extraction, from easiest to most difficult.
+
+### Easier to Refactor
+
+1.  **`clear`**
+    *   Reasoning: Very simple, no arguments, no game state interaction, just sends a fixed message. Minimal risk.
+2.  **`enabletally`**
+    *   Reasoning: Simple toggle of a boolean `global_vars.game.show_tally`. No arguments. Low complexity.
+3.  **`disabletally`**
+    *   Reasoning: Simple toggle of a boolean `global_vars.game.show_tally`. No arguments. Low complexity.
+4.  **`resetseats`**
+    *   Reasoning: Calls `global_vars.game.reseat()` with the current seating order. No argument parsing. Logic is mostly encapsulated in the `reseat` method.
+5.  **`setatheist`**
+    *   Reasoning: Sets `global_vars.game.script.is_atheist` based on a boolean argument. Simple argument parsing.
+6.  **`automatekills`**
+    *   Reasoning: Sets `global_vars.game.has_automated_life_and_death` based on a boolean argument. Simple argument parsing.
+7.  **`notactive`**
+    *   Reasoning: Reads game state (`global_vars.game.seatingOrder`, `player.is_active`) but doesn't modify it. Simple logic to list players. No arguments.
+8.  **`tocheckin`**
+    *   Reasoning: Reads game state (`global_vars.game.seatingOrder`, `player.has_checked_in`) but doesn't modify it. Simple logic to list players. No arguments.
+9.  **`cannominate`**
+    *   Reasoning: Reads game state but doesn't modify it. Simple logic to list players. No arguments.
+10. **`canbenominated`**
+    *   Reasoning: Reads game state but doesn't modify it. Simple logic to list players. No arguments.
+11. **`openpms`**
+    *   Reasoning: Calls `global_vars.game.days[-1].open_pms()`. Logic is mostly encapsulated. No arguments.
+12. **`opennoms`**
+    *   Reasoning: Calls `global_vars.game.days[-1].open_noms()`. Logic is mostly encapsulated. No arguments.
+13. **`closepms`**
+    *   Reasoning: Calls `global_vars.game.days[-1].close_pms()`. Logic is mostly encapsulated. No arguments.
+14. **`closenoms`**
+    *   Reasoning: Calls `global_vars.game.days[-1].close_noms()`. Logic is mostly encapsulated. No arguments.
+15. **`poison`**
+    *   Reasoning: Uses `select_player` and then calls `person.character.poison()`. Argument parsing is handled by `select_player`.
+16. **`unpoison`**
+    *   Reasoning: Uses `select_player` and then calls `person.character.unpoison()`. Argument parsing is handled by `select_player`.
+
+### Moderately Complex to Refactor
+
+17. **`whispermode`**
+    *   Reasoning: Argument parsing for mode type. Modifies `global_vars.game.whisper_mode` and calls `update_presence`. Interaction with `global_vars`.
+18. **`open`**
+    *   Reasoning: Combines `openpms` and `opennoms`. Simple, but involves two separate game state calls.
+19. **`close`**
+    *   Reasoning: Combines `closepms` and `closenoms`. Simple, but involves two separate game state calls.
+20. **`revive`**
+    *   Reasoning: Uses `select_player`. Calls `person.revive()`. Argument parsing via `select_player`. Modifies player state.
+21. **`makeinactive`**
+    *   Reasoning: Uses `select_player`. Calls `person.make_inactive()`. Argument parsing via `select_player`. Modifies player state.
+22. **`undoinactive`**
+    *   Reasoning: Uses `select_player`. Calls `person.undo_inactive()`. Argument parsing via `select_player`. Modifies player state.
+23. **`givedeadvote`**
+    *   Reasoning: Uses `select_player`. Calls `person.add_dead_vote()`. Argument parsing via `select_player`. Modifies player state.
+24. **`removedeadvote`**
+    *   Reasoning: Uses `select_player`. Calls `person.remove_dead_vote()`. Argument parsing via `select_player`. Modifies player state.
+25. **`grimoire`**
+    *   Reasoning: Iterates through `global_vars.game.seatingOrder` to build a message. Read-only, but involves string formatting based on player states. No arguments.
+26. **`lastactive`**
+    *   Reasoning: Sorts `global_vars.game.seatingOrder` and formats output. Read-only. No arguments.
+27. **`info`**
+    *   Reasoning: Uses `select_player`. Gathers multiple pieces of information about a player and formats them. Read-only for game state, involves character and game object properties.
+28. **`votehistory`**
+    *   Reasoning: Iterates through `global_vars.game.days` and `day.votes` to build a formatted string. Read-only. No arguments.
+29. **`cancelnomination`**
+    *   Reasoning: Modifies game state (`global_vars.game.days[-1].votes`, `player.can_nominate`, calls `open_pms`/`open_noms`). No complex argument parsing.
+30. **`checkin`**
+    *   Reasoning: Uses `select_player` for multiple players. Modifies `player.has_checked_in`. Calls `check_and_print_if_one_or_zero_to_check_in`.
+31. **`undocheckin`**
+    *   Reasoning: Uses `select_player` for multiple players. Modifies `player.has_checked_in`. Calls `check_and_print_if_one_or_zero_to_check_in`.
+32. **`kill`**
+    *   Reasoning: Uses `select_player`. Calls `person.kill(force=True)`. Involves player state modification.
+33. **`execute`**
+    *   Reasoning: Uses `select_player`. Calls `person.execute(message.author)`. Involves player state modification and passing the author.
+34. **`exile`**
+    *   Reasoning: Uses `select_player`. Calls `person.character.exile(person, message.author)`. Involves player and character state, specific to Travelers.
+35. **`handup` / `handdown`**
+    *   Reasoning: Modifies `player.hand_raised`, interacts with `global_vars.game.update_seating_order_message()`. Involves `client.wait_for` for preset vote confirmation. Player-specific command.
+36. **`defaultvote`**
+    *   Reasoning: Interacts with `GlobalSettings`. Argument parsing for vote type and time. Player-specific settings.
+
+### More Complex to Refactor
+
+37. **`welcome`**
+    *   Reasoning: Uses `select_player`. Interacts with `GameSettings` and `ChannelManager`. Constructs a complex welcome message. Involves `client.user.id` and role information.
+38. **`setdeadline`**
+    *   Reasoning: Parses deadline string (`parse_deadline`). Interacts with `global_vars.channel.fetch_message` and message pinning. Modifies `global_vars.game.days[-1].deadlineMessages`.
+39. **`endday`**
+    *   Reasoning: Calls `global_vars.game.days[-1].end()`. Core game progression logic.
+40. **`changerole`**
+    *   Reasoning: Uses `select_player`. Involves `client.wait_for` for role input. Uses `str_cleanup` and `str_to_class`. Calls `person.change_character()`.
+41. **`changealignment`**
+    *   Reasoning: Uses `select_player`. Involves `client.wait_for` for alignment input. Calls `person.change_alignment()`.
+42. **`changeability`**
+    *   Reasoning: Uses `select_player`. Checks `isinstance(person.character, AbilityModifier)`. Involves `client.wait_for` for role input. Uses `str_cleanup` and `str_to_class`. Calls `person.character.add_ability()`.
+43. **`removeability`**
+    *   Reasoning: Uses `select_player`. Checks `isinstance(person.character, AbilityModifier)`. Calls `person.character.clear_ability()`.
+44. **`messagetally`**
+    *   Reasoning: Parses message ID. Fetches message from history. Iterates through all players' message history and performs calculations. Complex data aggregation and formatting.
+45. **`whispers`**
+    *   Reasoning: Uses `select_player` or `get_player`. Iterates through a player's message history, aggregates counts, and formats output per day.
+46. **`reseat`**
+    *   Reasoning: Involves `client.wait_for` for new order. Uses `select_player` for multiple players. Calls `global_vars.game.reseat()`.
+47. **`pm` / `message`**
+    *   Reasoning: Uses `select_player`, `chose_whisper_candidates`. Involves `client.wait_for` for message content. Calls `person.message()`. Core player communication.
+48. **`history`**
+    *   Reasoning: Complex argument parsing for one or two players. Uses `select_player`. Iterates through message history and formats output, handling message length limits.
+49. **`search`**
+    *   Reasoning: Similar to `history` but searches content. Iterates through potentially all messages in the game for ST/Observer.
+50. **`adjustvotes` / `adjustvote`**
+    *   Reasoning: Parses three arguments. Uses `select_player` twice. Checks `isinstance(amnesiac.character, Amnesiac)`. Calls `amnesiac.character.enhance_votes()`.
+51. **`vote`** (DM and Town Square versions)
+    *   Reasoning: Handles voting logic. DM version has storyteller override with `client.wait_for`. Checks `voudon_in_play`. Interacts directly with `vote.vote()`. Critical game mechanic.
+52. **`presetvote` / `prevote`**
+    *   Reasoning: Similar to `vote` but for presetting. Handles `client.wait_for` for ST and player hand status. Interacts with `vote.preset_vote()`. Banshee logic.
+53. **`cancelpreset` / `cancelprevote`**
+    *   Reasoning: Similar to `presetvote`. Handles `client.wait_for` for ST. Interacts with `vote.cancel_preset()`.
+54. **`nominate`** (DM version)
+    *   Reasoning: Complex logic involving `select_player`, `is_storyteller`, `the_ability`, Riot checks with `client.wait_for`. Interacts with `global_vars.game.days[-1].nomination()`. Atheist game logic. Critical game mechanic.
+
+### Very Complex to Refactor (Core Game Logic)
+
+55. **`startday`**
+    *   Reasoning: Uses `select_player` for multiple players (optional argument). Calls `global_vars.game.start_day()`. Core game progression logic with optional kills.
+56. **`addtraveler` / `addtraveller`**
+    *   Reasoning: Uses `select_player`. Involves multiple `client.wait_for` calls for role, position, and alignment. Uses `str_cleanup`, `str_to_class`. Calls `global_vars.game.add_traveler()`.
+57. **`removetraveler` / `removetraveller`**
+    *   Reasoning: Uses `select_player`. Calls `global_vars.game.remove_traveler()`. Modifies core game seating order.
+58. **`endgame`**
+    *   Reasoning: Parses winner argument. Calls `global_vars.game.end()`. Core game finalization.
+59. **`startgame`**
+    *   Reasoning: Extremely complex. Multiple `client.wait_for` calls for seating order, roles, script. Extensive use of `select_player`, `str_cleanup`, `str_to_class`. Role assignment, channel setup (`ChannelManager`, `reorder_channels`), message pinning. Creates and initializes the main `Game` object in `global_vars`. This is the most complex command by far.
+
+**Note on `on_message_edit` and Town Square `vote`:**
+The logic within `on_message_edit` (for pinned nominations/skips) and the Town Square `vote` handling are also part of the legacy system but are event-driven rather than direct commands. They will also need refactoring, likely into more robust event handlers or by ensuring their logic is covered by refactored DM commands where appropriate (e.g., a storyteller command to confirm a pinned nomination). The Town Square `vote` is simpler than the DM version as it doesn't have ST overrides.
