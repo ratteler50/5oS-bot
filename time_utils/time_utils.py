@@ -40,7 +40,8 @@ def _parse_relative_deadline(deadline_string: str, now: datetime) -> Optional[da
 
 
 def _convert_to_timedelta(delta_str: str) -> Optional[timedelta]:
-    if '+' not in delta_str or ('h' not in delta_str and 'm' not in delta_str):
+    delta_str = delta_str.strip()
+    if not delta_str.startswith('+') or ('h' not in delta_str and 'm' not in delta_str):
         return None
     try:
         hours, minutes = 0.0, 0.0
