@@ -15,7 +15,8 @@ class TestStrictParsing:
         assert _convert_to_timedelta(" +30m") is None
         assert _convert_to_timedelta("  +1h") is None
 
-    def test_trailing_whitespace_accepted(self):
-        # Trailing whitespace should still be accepted as it starts with +
-        assert _convert_to_timedelta("+30m ") == timedelta(minutes=30)
-        assert _convert_to_timedelta("+1h  ") == timedelta(hours=1)
+    def test_trailing_whitespace_rejected(self):
+        # User requested strict parsing where "+30m " returns None
+        assert _convert_to_timedelta("+30m ") is None
+        assert _convert_to_timedelta("+1h  ") is None
+        assert _convert_to_timedelta("+1h garbage") is None
